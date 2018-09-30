@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace FitsArchiveLib
+namespace FitsArchiveLib.Interfaces
 {
     public struct HeaderKeyValue
     {
@@ -22,7 +19,7 @@ namespace FitsArchiveLib
         }
     }
 
-    public interface IFitsFile
+    public interface IFitsFileInfo
     {
         string FilePath { get; }
         long FileSize { get; }

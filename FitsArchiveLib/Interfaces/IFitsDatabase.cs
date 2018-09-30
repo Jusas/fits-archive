@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace FitsArchiveLib
+namespace FitsArchiveLib.Interfaces
 {
     public enum FileDbAddStatus
     {
@@ -13,8 +11,8 @@ namespace FitsArchiveLib
         TransactionCompleted
     }
 
-    public delegate void AddStatusHandler(
-        FileDbAddStatus status, string latestHandledFile, int processedFiles, int totalFiles);
+    public delegate void AddStatusHandler(FileDbAddStatus status, 
+        string latestHandledFile, int processedFiles, int totalFiles);
 
     public interface IFitsDatabase : IDisposable
     {
@@ -24,7 +22,6 @@ namespace FitsArchiveLib
         int FileCount { get; }
 
         Task AddFiles(IEnumerable<string> filePaths);
-        Task AddDirectory(string directoryPath, bool recursive);
 
     }
 }

@@ -5,27 +5,59 @@ using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
+using FitsArchiveLib.Interfaces;
 
-
-namespace FitsArchiveLib
+namespace FitsArchiveLib.Entities
 {
+    public class FitsDatabaseException : Exception
+    {
+        public FitsDatabaseException()
+        {
+        }
+
+        public FitsDatabaseException(string message) : base(message)
+        {
+        }
+
+        public FitsDatabaseException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected FitsDatabaseException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
     public class FitsDatabase : IFitsDatabase
     {
+        private class CountHolder
+        {
+            public int Count;
+        }
+
         public event AddStatusHandler OnAddStatusUpdated;
 
         public string DatabaseFile { get; private set; }
 
         public int FileCount => QueryFileCount();
         private SQLiteConnection _connection;
-        private IFitsFileFactory _fitsCreator;
+        private IFitsFileInfoFactory _fitsReader;
+        private ILog _log;
 
-        public FitsDatabase(IFitsFileFactory fitsCreator, 
+        private readonly object _readCounterMutex = new object();
+        
+
+        public FitsDatabase(IFitsFileInfoFactory fitsReader, 
+            ILog log,
             string databaseFilename, bool createIfNotExist)
         {
-            _fitsCreator = fitsCreator;
+            _fitsReader = fitsReader;
+            _log = log;
+
             if (!File.Exists(databaseFilename) && createIfNotExist)
             {
                 DatabaseFile = databaseFilename;
@@ -41,32 +73,46 @@ namespace FitsArchiveLib
                 }
                 catch (Exception e)
                 {
-                    throw new FitsDatabaseException("Failed to open the database file", e);
-                }
-                
+                    var err = "Failed to open the database file";
+                    _log?.Write(LogEventCategory.Error, err, e);
+                    throw new FitsDatabaseException(err, e);
+                }                
             }
             else
             {
-                throw new FitsDatabaseException("Database file does not exist, cannot open it");
+                var err = "Database file does not exist, cannot open it";
+                _log?.Write(LogEventCategory.Error, err);
+                throw new FitsDatabaseException(err);
             }
         }
 
 
         public async Task AddFiles(IEnumerable<string> filePaths)
         {
+            _log?.Write(LogEventCategory.Informational, $"Adding {filePaths.Count()} files to FITS database...");
             Open();
             OnAddStatusUpdated?.Invoke(FileDbAddStatus.ReadingHeaders, null, 0, filePaths.Count());
-            var awaitables = filePaths.Select(ReadFitsFile);
-            var fitsFiles = await Task.WhenAll(awaitables);
+            var fitsFiles = await ReadFitsFiles(filePaths);
             await InsertOrUpdateFitsFiles(fitsFiles.Where(ff => ff != null));
         }
 
-        public async Task AddDirectory(string directoryPath, bool recursive)
+        private async Task<IEnumerable<IFitsFileInfo>> ReadFitsFiles(IEnumerable<string> filePaths)
         {
-            throw new NotImplementedException();
+            var numFiles = filePaths.Count();
+            _log?.Write(LogEventCategory.Informational, $"Reading headers of {numFiles} files...");
+            
+            int readCount = 0;
+            var awaitables = filePaths.Select(fp => ReadFitsFileInfo(fp, (file) =>
+            {
+                lock (_readCounterMutex)
+                {
+                    readCount++;
+                }
+                _log?.Write(LogEventCategory.Informational, $"Read {readCount}/{numFiles} headers");
+            }));
+            return await Task.WhenAll(awaitables);
         }
-
-
+        
         private void Open()
         {
             string connString = $"Data Source={DatabaseFile};Version=3;";
@@ -107,61 +153,79 @@ namespace FitsArchiveLib
             }
         }
 
-        private async Task<IFitsFile> ReadFitsFile(string filePath)
+        private async Task<IFitsFileInfo> ReadFitsFileInfo(string filePath, Action<string> readComplete)
         {
             try
             {
                 return await Task.Run(() =>
                 {
-                    IFitsFile ff = _fitsCreator.CreateFitsFile(filePath);
+                    IFitsFileInfo ff = _fitsReader.CreateFitsFileInfo(filePath);
+                    readComplete?.Invoke(filePath);
                     return ff;
                 });
             }
             catch (Exception e)
             {
-                // TODO error reporting
-            }
+                _log?.Write(LogEventCategory.Error, "Reading FITS file info failed for file '{filePath}'", e);
+                readComplete?.Invoke(filePath);
+            }            
             return null;
         }
 
-        private async Task InsertOrUpdateFitsFiles(IEnumerable<IFitsFile> fitsFiles)
+        private async Task InsertOrUpdateFitsFiles(IEnumerable<IFitsFileInfo> fitsFiles)
         {
             Open();
 
             int handled = 0;
             foreach (var ff in fitsFiles)
             {
-                var checkExist = "SELECT id, checksum FROM Fits WHERE filename = @fn";
-                long? fileId = null;
-                string checksum = null;
-                using (var cmd = new SQLiteCommand(checkExist, _connection))
+                try
                 {
-                    cmd.Parameters.Add(new SQLiteParameter("fn", ff.FilePath));
-                    using (var reader = await cmd.ExecuteReaderAsync())
+                    var checkExist = "SELECT id, checksum FROM Fits WHERE filename = @fn";
+                    long? fileId = null;
+                    string checksum = null;
+                    using (var cmd = new SQLiteCommand(checkExist, _connection))
                     {
-                        if (reader.HasRows)
+                        cmd.Parameters.Add(new SQLiteParameter("fn", ff.FilePath));
+                        using (var reader = await cmd.ExecuteReaderAsync())
                         {
-                            reader.Read();
-                            fileId = reader.GetInt64(0);
-                            checksum = reader.GetString(1);
+                            if (reader.HasRows)
+                            {
+                                reader.Read();
+                                fileId = reader.GetInt64(0);
+                                checksum = reader.GetString(1);
+                            }
                         }
                     }
-                }
 
-                // Exists in database, and file contents have changed.
-                // Requires an update.
-                if (fileId != null && checksum != ff.FileHash)
-                {
-                    await PerformFitsTableTransaction(ff, fileId);
+                    // Exists in database, and file contents have changed.
+                    // Requires an update.
+                    if (fileId != null && checksum != ff.FileHash)
+                    {
+                        await PerformFitsTableTransaction(ff, fileId);
+                        _log?.Write(LogEventCategory.Informational, 
+                            $"Read and indexed {ff.HeaderKeys.Count} keywords from " +
+                            $"a changed FITS file {Path.GetFileName(ff.FilePath)}");
+                    }
+                    // Does not exist in database; insert required.
+                    else if (fileId == null)
+                    {
+                        await PerformFitsTableTransaction(ff, null);
+                        _log?.Write(LogEventCategory.Informational,
+                            $"Read and indexed {ff.HeaderKeys.Count} keywords from " +
+                            $"a new FITS file {Path.GetFileName(ff.FilePath)}");
+                    }
+                    // If the file was present in the DB and checksum matches, nothing to do.
+                    else
+                    {
+                        _log?.Write(LogEventCategory.Informational,
+                            $"FITS file {Path.GetFileName(ff.FilePath)} is already indexed and has not changed, skipping.");
+                    }
                 }
-                // Does not exist in database; insert required.
-                else if (fileId == null)
+                catch (Exception e)
                 {
-                    await PerformFitsTableTransaction(ff, null);
-                }
-                // If the file was present in the DB and checksum matches, nothing to do.
-                else
-                {
+                    var err = "Extraction of FITS file header keywords failed";
+                    _log?.Write(LogEventCategory.Error, err, e);
                 }
 
                 handled++;
@@ -171,7 +235,7 @@ namespace FitsArchiveLib
             OnAddStatusUpdated?.Invoke(FileDbAddStatus.TransactionCompleted, null, handled, fitsFiles.Count());
         }
 
-        private async Task PerformFitsTableTransaction(IFitsFile ff, long? fileId)
+        private async Task PerformFitsTableTransaction(IFitsFileInfo ff, long? fileId)
         {
             using (var transaction = _connection.BeginTransaction())
             {
@@ -222,7 +286,7 @@ namespace FitsArchiveLib
                     await cmd.ExecuteNonQueryAsync();
                 }
 
-                transaction.Commit();
+                transaction.Commit();                
             }
         }
 
@@ -231,7 +295,7 @@ namespace FitsArchiveLib
             return Regex.Replace(p, "[^a-zA-Z0-9_]+", "", RegexOptions.Compiled);
         }
 
-        private Dictionary<string, object> ConstructIndexedKeywordDictionary(IFitsFile ff)
+        private Dictionary<string, object> ConstructIndexedKeywordDictionary(IFitsFileInfo ff)
         {
             var keys = ff.HeaderKeys;
             var keywords = new string[]

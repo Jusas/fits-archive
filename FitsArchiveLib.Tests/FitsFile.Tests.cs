@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FitsArchiveLib.Entities;
 using NUnit.Framework;
 
 namespace FitsArchiveLib.Tests
@@ -15,7 +16,7 @@ namespace FitsArchiveLib.Tests
         public void TestReadingFitsFile()
         {
             var fitsPath = Path.Combine(TestUtils.GetTestPath(), @"Resources\FitsFiles\Light_001.fits");
-            FitsFile ff = new FitsFile(fitsPath);
+            FitsFileInfo ff = new FitsFileInfo(fitsPath);
             var keys = ff.HeaderKeys;
 
             var telescope = ff.GetSingleHeaderValue("TELESCOP");

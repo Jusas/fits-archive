@@ -4,11 +4,12 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using FitsArchiveLib.Interfaces;
 
 namespace FitsArchiveLib.Tests.Mocks
 {
     // Minimal implementation of FITS file.
-    class MockFitsFile : IFitsFile
+    class MockFitsFileInfo : IFitsFileInfo
     {
         public string FilePath { get; }
         public long FileSize { get; }
@@ -17,7 +18,7 @@ namespace FitsArchiveLib.Tests.Mocks
 
         private Dictionary<string, HeaderKeyValue> _headers = new Dictionary<string, HeaderKeyValue>();
 
-        public MockFitsFile(string filePath)
+        public MockFitsFileInfo(string filePath)
         {
             FilePath = filePath;
             _headers.Add("COMMENT", new HeaderKeyValue("COMMENT", Guid.NewGuid().ToString(), ""));
