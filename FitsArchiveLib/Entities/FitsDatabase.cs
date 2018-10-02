@@ -45,13 +45,13 @@ namespace FitsArchiveLib.Entities
 
         public int FileCount => QueryFileCount();
         private SQLiteConnection _connection;
-        private IFitsFileInfoFactory _fitsReader;
+        private IFitsFileInfoService _fitsReader;
         private ILog _log;
 
         private readonly object _readCounterMutex = new object();
         
 
-        public FitsDatabase(IFitsFileInfoFactory fitsReader, 
+        public FitsDatabase(IFitsFileInfoService fitsReader, 
             ILog log,
             string databaseFilename, bool createIfNotExist)
         {
@@ -159,7 +159,7 @@ namespace FitsArchiveLib.Entities
             {
                 return await Task.Run(() =>
                 {
-                    IFitsFileInfo ff = _fitsReader.CreateFitsFileInfo(filePath);
+                    IFitsFileInfo ff = _fitsReader.GetFitsFileInfo(filePath);
                     readComplete?.Invoke(filePath);
                     return ff;
                 });

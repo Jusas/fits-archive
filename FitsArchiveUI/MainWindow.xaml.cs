@@ -16,22 +16,23 @@ using System.Windows.Shapes;
 using FitsArchiveLib.Entities;
 using FitsArchiveLib.Interfaces;
 using FitsArchiveLib.Services;
+using FitsArchiveUI.ViewModels;
 
 namespace FitsArchiveUI
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow
     {
         private IFitsDatabase _database;
-        public MainWindow()
+
+        public MainWindow(MainViewModel viewModel, ILogService logService) : base(viewModel)
         {
             InitializeComponent();
-            var logService = new LogService();
-            var logstream = new MemoryStream();
-            var log = logService.InitializeLog("all", logstream);
-            _database = new FitsDatabase(new FitsFileInfoFactory(), log, @"C:\tmp\fitstestdb.db", true);
+            var logStream = new MemoryStream();
+            var log = logService.InitializeLog("all", logStream);
+            _database = new FitsDatabase(new FitsFileInfoService(), log, @"C:\tmp\fitstestdb.db", true);
         }
 
         private async void RunButton_Click(object sender, RoutedEventArgs e)

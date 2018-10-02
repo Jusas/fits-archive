@@ -40,7 +40,7 @@ namespace FitsArchiveLib.Tests
         [Test(Description = "Test autocreating a new database file at path when it doesn't exist")]
         public void TestDbAutoCreate()
         {
-            var fitsCreator = new FitsFileInfoFactory();
+            var fitsCreator = new FitsFileInfoService();
             var file = TestUtils.GenerateRandomFileName();
             _perTestDeletables.Add(file);
             using (var newFitsDb = new FitsDatabase(fitsCreator, null, file, true));
@@ -50,7 +50,7 @@ namespace FitsArchiveLib.Tests
         [Test(Description = "Test inserting/indexing a FITS file into a new test database")]
         public async Task TestIndexingAFitsFile()
         {
-            var fitsCreator = new FitsFileInfoFactory();
+            var fitsCreator = new FitsFileInfoService();
             var file = TestUtils.GenerateRandomFileName();
             _perTestDeletables.Add(file);
             using (var newFitsDb = new FitsDatabase(fitsCreator, null, file, true))
@@ -64,7 +64,7 @@ namespace FitsArchiveLib.Tests
         [Test(Description = "Test updating a FITS file with identical data and path in a new test database")]
         public async Task TestIndexingAnExistingFitsFileInDb()
         {
-            var fitsCreator = new FitsFileInfoFactory();
+            var fitsCreator = new FitsFileInfoService();
             var file = TestUtils.GenerateRandomFileName();
             _perTestDeletables.Add(file);
             using (var newFitsDb = new FitsDatabase(fitsCreator, null, file, true))
@@ -79,8 +79,8 @@ namespace FitsArchiveLib.Tests
         public async Task TestIndexingAChangedFitsFileInDb()
         {
 
-            var fitsCreator = new Mock<IFitsFileInfoFactory>();
-            fitsCreator.Setup(x => x.CreateFitsFileInfo(It.IsAny<string>())).Returns(
+            var fitsCreator = new Mock<IFitsFileInfoService>();
+            fitsCreator.Setup(x => x.GetFitsFileInfo(It.IsAny<string>())).Returns(
                 (string filePath) => new MockFitsFileInfo(filePath));
 
             var file = TestUtils.GenerateRandomFileName();

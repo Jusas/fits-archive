@@ -3,9 +3,9 @@ using FitsArchiveLib.Interfaces;
 
 namespace FitsArchiveLib.Services
 {
-    public class FitsFileInfoFactory : IFitsFileInfoFactory
+    public class FitsFileInfoService : IFitsFileInfoService
     {
-        public IFitsFileInfo CreateFitsFileInfo(string filePath)
+        public IFitsFileInfo GetFitsFileInfo(string filePath)
         {
             return new FitsFileInfo(filePath);
         }
