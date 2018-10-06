@@ -68,6 +68,7 @@
     <Compile Include="Entities\FitsFileInfo.cs" />
     <Compile Include="FitsArchiveLibModule.cs" />
     <Compile Include="Interfaces\ILogService.cs" />
+    <Compile Include="Services\FitsDatabaseService.cs" />
     <Compile Include="Services\FitsFileInfoService.cs" />
     <Compile Include="Interfaces\IFitsDatabase.cs" />
     <Compile Include="Interfaces\IFitsDatabaseService.cs" />

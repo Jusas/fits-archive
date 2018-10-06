@@ -37,13 +37,13 @@ namespace FitsArchiveUI
 
         private async void RunButton_Click(object sender, RoutedEventArgs e)
         {
-            var path = PathBox.Text;
-            // Problem with drive root: get *.fits from root, then get directories under root, ignore system files
-            // if (dir.EndsWith("System Volume Information")) return true;
-            // if (dir.Contains("$RECYCLE.BIN")) return true;
-            // then enumerate files in all the dirs, combine them, and finally pass that to AddFiles().
-            var allFitsFiles = Directory.EnumerateFiles(path, "*.fits", SearchOption.AllDirectories);
-            await _database.AddFiles(allFitsFiles);
+            //var path = PathBox.Text;
+            //// Problem with drive root: get *.fits from root, then get directories under root, ignore system files
+            //// if (dir.EndsWith("System Volume Information")) return true;
+            //// if (dir.Contains("$RECYCLE.BIN")) return true;
+            //// then enumerate files in all the dirs, combine them, and finally pass that to AddFiles().
+            //var allFitsFiles = Directory.EnumerateFiles(path, "*.fits", SearchOption.AllDirectories);
+            //await _database.AddFiles(allFitsFiles);
 
         }
     }

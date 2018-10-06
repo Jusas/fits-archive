@@ -50,7 +50,7 @@ namespace FitsArchiveLib.Services
                 {
                     var stream = File.Create(logfilename);
                     var log = new Log(stream);
-                    _logs.Add(logfilename, log);
+                    _logs.Add(logId, log);
                     return log;
                 }
                 catch (Exception e)
@@ -64,7 +64,7 @@ namespace FitsArchiveLib.Services
                 {
                     var stream = File.Open(logfilename, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
                     var log = new Log(stream);
-                    _logs.Add(logfilename, log);
+                    _logs.Add(logId, log);
                     return log;
                 }
                 catch (Exception e)

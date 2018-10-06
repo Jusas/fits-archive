@@ -8,6 +8,7 @@ using System.Windows;
 using FitsArchiveLib.Interfaces;
 using FitsArchiveUI.ViewModels;
 using Ninject;
+using PresentationTheme.Aero;
 
 namespace FitsArchiveUI
 {
@@ -16,9 +17,15 @@ namespace FitsArchiveUI
     /// </summary>
     public partial class App : Application
     {
+
+        public App()
+        {
+            AeroTheme.SetAsCurrentTheme();
+        }
+
         private void AppStartup(object sender, StartupEventArgs e)
         {
-            Bootstrap.SetupDI();
+            Bootstrap.Setup();
             var mainWin = Bootstrap.Kernel.Get<MainWindow>();
             MainWindow = mainWin;
             MainWindow.Show();

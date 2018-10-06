@@ -6,12 +6,57 @@
         xmlns:local="clr-namespace:FitsArchiveUI"
         xmlns:viewModels="clr-namespace:FitsArchiveUI.ViewModels"
         xmlns:views="clr-namespace:FitsArchiveUI.Views"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" WindowStartupLocation="CenterScreen">
     
     <Grid d:DataContext="{d:DesignInstance Type=viewModels:MainViewModel}">
-        <Button x:Name="RunButton" Content="{Binding Name}" HorizontalAlignment="Left" Margin="241,67,0,0" VerticalAlignment="Top" Width="75" Click="RunButton_Click"/>
-        <TextBox x:Name="PathBox" HorizontalAlignment="Left" Height="23" Margin="52,64,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="174"/>
 
+        <Grid Panel.ZIndex="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="22" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Menu Grid.Row="0" Grid.ColumnSpan="2" IsMainMenu="True">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_New FITS archive..." Command="{Binding NewDbCommand}"></MenuItem>
+                    <MenuItem Header="_Open FITS archive..." Command="{Binding OpenDbCommand}"/>
+                    <MenuItem Header="_Exit" />
+
+                </MenuItem>
+                <MenuItem Header="_Settings">
+                </MenuItem>
+            </Menu>
+
+            <ToolBar Grid.Row="1">
+
+                <Button ToolTip="Create new FITS archive" Style="{StaticResource ToolbarButton}" IsEnabled="True"
+                        Command="{Binding NewDbCommand}">
+                    <fa:ImageAwesome Icon="FileOutline" Height="20" Width="24"></fa:ImageAwesome>
+                </Button>
+                
+                <Button ToolTip="Open FITS archive" Style="{StaticResource ToolbarButton}" IsEnabled="True"
+                        Command="{Binding OpenDbCommand}">
+                    <fa:ImageAwesome Icon="FolderOutlinepenOutline" Height="24" Width="24"></fa:ImageAwesome>
+                </Button>
+                
+                <Separator />
+
+                <Button ToolTip="New query" Style="{StaticResource ToolbarButton}" IsEnabled="False">
+                    <fa:ImageAwesome Icon="SearchPlus" Width="24"></fa:ImageAwesome>
+                </Button>
+
+
+            </ToolBar>
+
+        </Grid>
+
+        
     </Grid>
 </views:ViewBase>

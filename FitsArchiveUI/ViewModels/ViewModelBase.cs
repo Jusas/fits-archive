@@ -42,7 +42,7 @@ namespace FitsArchiveUI.ViewModels
                 return _ownerView;
             }
         }
-        protected ILogService LogService;
+        protected ILog Log;
 
         #endregion
 
@@ -51,9 +51,9 @@ namespace FitsArchiveUI.ViewModels
         #region METHODS
         //-------------------------------------------------------------------------------------------------------
 
-        protected ViewModelBase(ILogService logService)
+        protected ViewModelBase(ILog log)
         {
-            LogService = logService;
+            Log = log;
         }
 
         public virtual void Initialize()

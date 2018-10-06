@@ -15,6 +15,7 @@ namespace FitsArchiveLib
         {
             Bind<ILogService>().To<LogService>().InSingletonScope();
             Bind<IFitsFileInfoService>().To<FitsFileInfoService>().InSingletonScope();
+            Bind<IFitsDatabaseService>().To<FitsDatabaseService>().InSingletonScope();
         }
     }
 }
