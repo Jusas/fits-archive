@@ -42,6 +42,8 @@ namespace FitsArchiveUI
                 return ls.HasLog(CommonLogName) ? ls.GetLog(CommonLogName) : ls.InitializeLog(CommonLogName, logFile);
             });
             
+            // Bind ViewModelProvider
+            kcfg.Bind<IViewModelProvider>().ToMethod(context => new ViewModelProvider(Kernel)).InSingletonScope();
         }
 
         private static void PostKernelBuild()

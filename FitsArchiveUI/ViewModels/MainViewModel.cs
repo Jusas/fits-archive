@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,14 +20,20 @@ namespace FitsArchiveUI.ViewModels
         public ICommand NewDbCommand => new CommandHandler(OpenNewDatabaseDialog);
 
         public IFitsDatabase FitsDatabase { get; private set; }
+
+        public ObservableCollection<QueryTabItemViewModel> QueryTabs { get; set; } = new ObservableCollection<QueryTabItemViewModel>();
         
         private IFitsDatabaseService _fitsDatabaseService;
+        private IViewModelProvider _viewModelProvider;
 
         public MainViewModel(ILog log,
-            IFitsDatabaseService fitsDatabaseService) : base(log)
+            IFitsDatabaseService fitsDatabaseService,
+            IViewModelProvider viewModelProvider) : base(log)
         {
             _fitsDatabaseService = fitsDatabaseService;
+            _viewModelProvider = viewModelProvider;
             Name = "Hello";
+            QueryTabs.Add(_viewModelProvider.Instantiate<QueryTabItemViewModel>());
         }
 
         private void OpenSelectDatabaseDialog()

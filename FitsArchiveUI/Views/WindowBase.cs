@@ -9,7 +9,7 @@ using FitsArchiveUI.ViewModels;
 
 namespace FitsArchiveUI.Views
 {
-    public abstract class ViewBase<TViewModel> : Window, IView<TViewModel>
+    public abstract class WindowBase<TViewModel> : Window, IWindow<TViewModel>
     {
         private IViewModel<TViewModel> _viewModel;
         public IViewModel<TViewModel> ViewModel
@@ -30,7 +30,7 @@ namespace FitsArchiveUI.Views
         public event EventHandler<CancelEventArgs> OnViewClosing;
         public event EventHandler OnViewClosed;
 
-        protected ViewBase(IViewModel<TViewModel> viewModel)
+        protected WindowBase(IViewModel<TViewModel> viewModel)
         {
             ViewModel = viewModel;
             InitializeInterfaceBindings();

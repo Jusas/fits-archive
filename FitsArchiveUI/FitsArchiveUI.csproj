@@ -80,15 +80,38 @@
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
     </ApplicationDefinition>
+    <Compile Include="Utils\LocExtension.cs" />
     <Compile Include="Utils\PropertyChangedExtendedEventArgs.cs" />
     <Compile Include="Utils\ReflectionUtils.cs" />
+    <Compile Include="Utils\TranslationSource.cs" />
+    <Compile Include="Utils\WatermarkAdorner.cs" />
+    <Compile Include="Utils\WatermarkService.cs" />
     <Compile Include="ViewModels\CommandHandler.cs" />
+    <Compile Include="ViewModels\IViewModelProvider.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\QueryParameterViewModel.cs" />
+    <Compile Include="ViewModels\QueryTabItemViewModel.cs" />
+    <Compile Include="ViewModels\QueryTabViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="ViewModels\ViewModelProvider.cs" />
     <Compile Include="ViewModels\ViewModelsModule.cs" />
     <Compile Include="ViewModels\IViewModel.cs" />
+    <Compile Include="Views\ITabItem.cs" />
+    <Compile Include="Views\IUserControl.cs" />
     <Compile Include="Views\IView.cs" />
-    <Compile Include="Views\ViewBase.cs" />
+    <Compile Include="Views\IWindow.cs" />
+    <Compile Include="Views\QueryParameterView.xaml.cs">
+      <DependentUpon>QueryParameterView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\QueryTabItem.xaml.cs">
+      <DependentUpon>QueryTabItem.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\QueryTabView.xaml.cs">
+      <DependentUpon>QueryTabView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\TabItemBase.cs" />
+    <Compile Include="Views\UserControlBase.cs" />
+    <Compile Include="Views\WindowBase.cs" />
     <Compile Include="Views\ViewsModule.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -103,6 +126,15 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\QueryParameterView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\QueryTabItem.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\QueryTabView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
