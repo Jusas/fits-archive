@@ -1,4 +1,4 @@
-﻿<views:UserControlBase x:TypeArguments="viewModels:QueryTabViewModel" x:Class="FitsArchiveUI.Views.QueryTabView"
+﻿<views:QueryTabViewBase x:Class="FitsArchiveUI.Views.QueryTabView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -25,19 +25,33 @@
             </StackPanel>
         </ScrollViewer>
         <GridSplitter Grid.Row="1" Height="4" HorizontalAlignment="Stretch"/>
-        <StackPanel Orientation="Horizontal" Grid.Row="2" Margin="12,4,8,4">
-            <Button ToolTip="Add query parameter" Margin="0,0,12,0">
-                <StackPanel Height="{Binding Path=Parent.ActualHeight}" Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="PlusCircle" Margin="4" Height="Auto"></fa:ImageAwesome>
-                </StackPanel>
-            </Button>
-            <Button>
-                <StackPanel Height="{Binding Path=Parent.ActualHeight}" Orientation="Horizontal">
-                    <fa:ImageAwesome Icon="Search" Margin="4" Height="Auto"></fa:ImageAwesome>
-                    <TextBlock Text="Run search" VerticalAlignment="Center" Margin="0,0,4,0"></TextBlock>
-                </StackPanel>
-            </Button>
-        </StackPanel>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+                <ColumnDefinition Width="1*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="12,4,8,4">
+                <Button ToolTip="Add query parameter" Margin="0,0,12,0">
+                    <StackPanel Height="{Binding Path=Parent.ActualHeight}" Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="PlusCircle" Margin="4" Height="Auto"></fa:ImageAwesome>
+                    </StackPanel>
+                </Button>
+                <Button>
+                    <StackPanel Height="{Binding Path=Parent.ActualHeight}" Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="Search" Margin="4" Height="Auto"></fa:ImageAwesome>
+                        <TextBlock Text="Run search" VerticalAlignment="Center" Margin="0,0,4,0"></TextBlock>
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="123" Margin="8,0,5,0" VerticalAlignment="Center"></TextBlock>
+                <TextBlock Text="results" VerticalAlignment="Center"></TextBlock>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Margin="12,4,8,4" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button MaxWidth="100" Height="{Binding Path=Parent.ActualHeight}">
+                    <TextBlock Text="Customize grid"></TextBlock>
+                </Button>
+            </StackPanel>
+        </Grid>
         <DataGrid Grid.Row="3" ItemsSource="{Binding QueryResults}"></DataGrid>
     </Grid>
-</views:UserControlBase>
+</views:QueryTabViewBase>

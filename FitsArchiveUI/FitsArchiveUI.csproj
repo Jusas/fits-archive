@@ -100,12 +100,11 @@
     <Compile Include="Views\IUserControl.cs" />
     <Compile Include="Views\IView.cs" />
     <Compile Include="Views\IWindow.cs" />
+    <Compile Include="Views\MainWindowBase.cs" />
     <Compile Include="Views\QueryParameterView.xaml.cs">
       <DependentUpon>QueryParameterView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Views\QueryTabItem.xaml.cs">
-      <DependentUpon>QueryTabItem.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="Views\QueryTabViewBase.cs" />
     <Compile Include="Views\QueryTabView.xaml.cs">
       <DependentUpon>QueryTabView.xaml</DependentUpon>
     </Compile>
@@ -127,9 +126,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\QueryParameterView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\QueryTabItem.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\QueryTabView.xaml">

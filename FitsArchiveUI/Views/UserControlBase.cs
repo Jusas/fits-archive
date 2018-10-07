@@ -27,7 +27,7 @@ namespace FitsArchiveUI.Views
 
         protected UserControlBase(IViewModel<TViewModel> viewModel)
         {
-            ViewModel = viewModel;
+            // ViewModel = viewModel;
             InitializeInterfaceBindings();
         }
 

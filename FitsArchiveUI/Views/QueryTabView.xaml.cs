@@ -19,9 +19,9 @@ namespace FitsArchiveUI.Views
     /// <summary>
     /// Interaction logic for QueryTabView.xaml
     /// </summary>
-    public partial class QueryTabView : UserControlBase<QueryTabViewModel>
+    public partial class QueryTabView : QueryTabViewBase
     {
-        public QueryTabView() : base(new QueryTabViewModel(null))
+        public QueryTabView() : base(null)
         {
             InitializeComponent();
         }
@@ -29,6 +29,7 @@ namespace FitsArchiveUI.Views
         public QueryTabView(QueryTabViewModel viewModel) : base(viewModel)
         {
             InitializeComponent();
+            ViewModel = viewModel;
         }
     }
 }

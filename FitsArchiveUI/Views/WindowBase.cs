@@ -32,7 +32,7 @@ namespace FitsArchiveUI.Views
 
         protected WindowBase(IViewModel<TViewModel> viewModel)
         {
-            ViewModel = viewModel;
+            // ViewModel = viewModel;
             InitializeInterfaceBindings();
         }
 

@@ -17,18 +17,20 @@ using FitsArchiveLib.Entities;
 using FitsArchiveLib.Interfaces;
 using FitsArchiveLib.Services;
 using FitsArchiveUI.ViewModels;
+using FitsArchiveUI.Views;
 
 namespace FitsArchiveUI
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow
+    public partial class MainWindow : MainWindowBase
     {
         private IFitsDatabase _database;
 
         public MainWindow(MainViewModel viewModel, ILogService logService) : base(viewModel)
         {
+            ViewModel = viewModel;
             InitializeComponent();
             var logStream = new MemoryStream();
             var log = logService.InitializeLog("all", logStream);
