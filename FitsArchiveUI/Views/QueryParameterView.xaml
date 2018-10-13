@@ -1,14 +1,18 @@
-﻿<UserControl x:Class="FitsArchiveUI.Views.QueryParameterView"
+﻿<views:QueryParameterViewBase x:Class="FitsArchiveUI.Views.QueryParameterView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:FitsArchiveUI.Views"
+             xmlns:views="clr-namespace:FitsArchiveUI.Views"
              xmlns:utils="clr-namespace:FitsArchiveUI.Utils"
              xmlns:fa="http://schemas.fontawesome.io/icons/"
              xmlns:viewModels="clr-namespace:FitsArchiveUI.ViewModels"
+             xmlns:converters="clr-namespace:FitsArchiveUI.Views.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="34" d:DesignWidth="800">
+    <UserControl.Resources>
+        <converters:QueryParamTypeToVisConverter x:Key="QpVisConv"></converters:QueryParamTypeToVisConverter>
+    </UserControl.Resources>
     <Grid d:DataContext="{d:DesignInstance Type=viewModels:QueryParameterViewModel}">
         <DockPanel Margin="5,5,5,5" Grid.RowSpan="1" VerticalAlignment="Top">
             <Grid>
@@ -19,11 +23,11 @@
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{utils:Loc query_keyword_or_property}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8,0,8,0"></TextBlock>
                     <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="150" Margin="0,0,8,0"></ComboBox>
-                    
-                    <Grid Name="TextInputField" Visibility="Collapsed" VerticalAlignment="Center">
+
+                    <Grid Name="TextInputField" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.TextField}}" VerticalAlignment="Center">
                         <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="300" Padding="0"></TextBox>
                     </Grid>
-                    <Grid Name="RaDecFields" Visibility="Collapsed">
+                    <Grid Name="RaDecFields" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.RaDec}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="RA:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
                             <TextBox MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="RaBox">
@@ -39,7 +43,7 @@
                             </TextBox>
                         </StackPanel>
                     </Grid>
-                    <Grid Name="XyFields" Visibility="Collapsed">
+                    <Grid Name="XyFields" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.Xy}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="X:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
                             <TextBox MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="XBox"></TextBox>
@@ -47,7 +51,7 @@
                             <TextBox MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="YBox"></TextBox>
                         </StackPanel>
                     </Grid>
-                    <Grid Name="LatitudeField" Visibility="Collapsed">
+                    <Grid Name="LatitudeField" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.Latitude}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <ComboBox Name="LatitudeGtLt" Width="50" Margin="0,0,8,0"></ComboBox>
                             <TextBlock Text="{utils:Loc query_latitude}" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
@@ -58,7 +62,7 @@
                             </TextBox>
                         </StackPanel>
                     </Grid>
-                    <Grid Name="TimePeriodFields" Visibility="Visible">
+                    <Grid Name="TimePeriodFields" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.TimePeriod}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Between:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
                             <DatePicker VerticalAlignment="Center"></DatePicker>
@@ -74,4 +78,4 @@
 
         </DockPanel>
     </Grid>
-</UserControl>
+</views:QueryParameterViewBase>

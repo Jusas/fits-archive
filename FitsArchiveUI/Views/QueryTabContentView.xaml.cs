@@ -17,16 +17,16 @@ using FitsArchiveUI.ViewModels;
 namespace FitsArchiveUI.Views
 {
     /// <summary>
-    /// Interaction logic for QueryTabView.xaml
+    /// Interaction logic for QueryTabContentView.xaml
     /// </summary>
-    public partial class QueryTabView : QueryTabViewBase
+    public partial class QueryTabContentView : QueryTabContentViewBase
     {
-        public QueryTabView() : base(null)
+        public QueryTabContentView() : base(null)
         {
             InitializeComponent();
         }
 
-        public QueryTabView(QueryTabViewModel viewModel) : base(viewModel)
+        public QueryTabContentView(QueryTabContentViewModel viewModel) : base(viewModel)
         {
             InitializeComponent();
             ViewModel = viewModel;

@@ -21,7 +21,7 @@ namespace FitsArchiveUI.ViewModels
 
         public IFitsDatabase FitsDatabase { get; private set; }
 
-        public ObservableCollection<QueryTabItemViewModel> QueryTabs { get; set; } = new ObservableCollection<QueryTabItemViewModel>();
+        public ObservableCollection<QueryTabContainerViewModel> QueryTabs { get; set; } = new ObservableCollection<QueryTabContainerViewModel>();
         
         private IFitsDatabaseService _fitsDatabaseService;
         private IViewModelProvider _viewModelProvider;
@@ -33,7 +33,7 @@ namespace FitsArchiveUI.ViewModels
             _fitsDatabaseService = fitsDatabaseService;
             _viewModelProvider = viewModelProvider;
             Name = "Hello";
-            QueryTabs.Add(_viewModelProvider.Instantiate<QueryTabItemViewModel>());
+            QueryTabs.Add(_viewModelProvider.Instantiate<QueryTabContainerViewModel>());
         }
 
         private void OpenSelectDatabaseDialog()

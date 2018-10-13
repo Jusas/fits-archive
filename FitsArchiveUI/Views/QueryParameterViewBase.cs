@@ -5,9 +5,9 @@ namespace FitsArchiveUI.Views
     /// <summary>
     /// A wrapper class because the VS Designer doesn't like inheriting from generic classes directly.
     /// </summary>
-    public class QueryParameterViewBase : UserControlBase<QueryParameterViewModel>
+    public class QueryTabContentViewBase : UserControlBase<QueryTabContentViewModel>
     {
-        public QueryParameterViewBase(IViewModel<QueryParameterViewModel> viewModel) : base(viewModel)
+        public QueryTabContentViewBase(IViewModel<QueryTabContentViewModel> viewModel) : base(viewModel)
         {
         }
     }

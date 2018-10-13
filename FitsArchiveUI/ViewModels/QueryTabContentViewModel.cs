@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,7 +8,10 @@ using FitsArchiveLib.Interfaces;
 
 namespace FitsArchiveUI.ViewModels
 {
-    public class QueryTabViewModel : ViewModelBase<QueryTabViewModel>
+    /// <summary>
+    /// Pairs with QueryTabContentView.
+    /// </summary>
+    public class QueryTabContentViewModel : ViewModelBase<QueryTabContentViewModel>
     {
         public class TestDataRow
         {
@@ -36,8 +40,13 @@ namespace FitsArchiveUI.ViewModels
             }
         };
 
-        public QueryTabViewModel(ILog log) : base(log)
+        public ObservableCollection<QueryParameterViewModel> QueryParams { get; set; } = 
+            new ObservableCollection<QueryParameterViewModel>();
+
+        public QueryTabContentViewModel(ILog log, IViewModelProvider viewModelProvider) : base(log)
         {
+            var defaultQueryParam = viewModelProvider.Instantiate<QueryParameterViewModel>();
+            QueryParams.Add(defaultQueryParam);
         }
 
 

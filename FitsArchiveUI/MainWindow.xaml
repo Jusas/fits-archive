@@ -83,8 +83,8 @@
                     </DataTemplate>
                 </TabControl.ItemTemplate>
                 <TabControl.ContentTemplate>
-                    <DataTemplate>
-                        <views:QueryTabView></views:QueryTabView>
+                    <DataTemplate DataType="{x:Type viewModels:QueryTabContainerViewModel}">
+                        <views:QueryTabContentView DataContext="{Binding TabContentViewModel}"></views:QueryTabContentView>
                     </DataTemplate>
                 </TabControl.ContentTemplate>
             </TabControl>

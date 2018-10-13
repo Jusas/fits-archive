@@ -90,12 +90,13 @@
     <Compile Include="ViewModels\IViewModelProvider.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\QueryParameterViewModel.cs" />
-    <Compile Include="ViewModels\QueryTabItemViewModel.cs" />
-    <Compile Include="ViewModels\QueryTabViewModel.cs" />
+    <Compile Include="ViewModels\QueryTabContainerViewModel.cs" />
+    <Compile Include="ViewModels\QueryTabContentViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="ViewModels\ViewModelProvider.cs" />
     <Compile Include="ViewModels\ViewModelsModule.cs" />
     <Compile Include="ViewModels\IViewModel.cs" />
+    <Compile Include="Views\Converters\QueryParamTypeToVisConverter.cs" />
     <Compile Include="Views\ITabItem.cs" />
     <Compile Include="Views\IUserControl.cs" />
     <Compile Include="Views\IView.cs" />
@@ -104,9 +105,10 @@
     <Compile Include="Views\QueryParameterView.xaml.cs">
       <DependentUpon>QueryParameterView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Views\QueryParameterViewBase.cs" />
     <Compile Include="Views\QueryTabViewBase.cs" />
-    <Compile Include="Views\QueryTabView.xaml.cs">
-      <DependentUpon>QueryTabView.xaml</DependentUpon>
+    <Compile Include="Views\QueryTabContentView.xaml.cs">
+      <DependentUpon>QueryTabContentView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\TabItemBase.cs" />
     <Compile Include="Views\UserControlBase.cs" />
@@ -128,7 +130,7 @@
     <Page Include="Views\QueryParameterView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Views\QueryTabView.xaml">
+    <Page Include="Views\QueryTabContentView.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

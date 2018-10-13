@@ -12,17 +12,24 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using FitsArchiveUI.ViewModels;
 
 namespace FitsArchiveUI.Views
 {
     /// <summary>
     /// Interaction logic for QueryParameterView.xaml
     /// </summary>
-    public partial class QueryParameterView : UserControl
+    public partial class QueryParameterView : QueryParameterViewBase
     {
-        public QueryParameterView()
+        public QueryParameterView() : base(null)
         {
             InitializeComponent();
+        }
+
+        public QueryParameterView(QueryParameterViewModel viewModel) : base(viewModel)
+        {
+            InitializeComponent();
+            ViewModel = viewModel;
         }
     }
 }
