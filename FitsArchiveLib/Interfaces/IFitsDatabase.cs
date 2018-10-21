@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using FitsArchiveLib.Database;
 
 namespace FitsArchiveLib.Interfaces
 {
@@ -23,5 +25,8 @@ namespace FitsArchiveLib.Interfaces
 
         Task AddFiles(IEnumerable<string> filePaths);
 
+        IQueryable<FitsTableRow> FileListAsQueryable();
+        IQueryable<FitsHeaderIndexedRow> HeadersIndexedAsQueryable();
+        IQueryable<PlateSolvesTable> PlateSolvesAsQueryable();
     }
 }

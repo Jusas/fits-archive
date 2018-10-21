@@ -93,5 +93,21 @@ namespace FitsArchiveLib.Tests
                 Assert.AreEqual(1, newFitsDb.FileCount);
             }
         }
+
+        [Test]
+        public async Task TestStuff()
+        {
+            var fitsCreator = new FitsFileInfoService();
+            var file = TestUtils.GenerateRandomFileName();
+            _perTestDeletables.Add(file);
+            using (var newFitsDb = new FitsDatabase(fitsCreator, null, file, true))
+            {
+                var fitsFilePath = Path.Combine(TestUtils.GetTestPath(), "Resources", "FitsFiles", "Light_001.fits");
+                await newFitsDb.AddFiles(new[] { fitsFilePath });
+                // var queryable = newFitsDb.FileListAsQueryable();
+                var queryRes = newFitsDb.FileListAsQueryable().ToList();
+                Assert.AreEqual(1, queryRes.Count);
+            }
+        }
     }
 }

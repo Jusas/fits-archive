@@ -89,7 +89,7 @@ namespace FitsArchiveLib.Entities
             FileSize = finfo.Length;
         }
 
-        private byte[] HeadersToBytes()
+        private byte[] HeadersToBytes() // This may not be sufficient.
         {
             List<string> all = new List<string>();
             foreach (var h in _header)

@@ -7,9 +7,16 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using FitsArchiveLib.Attributes;
+using FitsArchiveLib.Database;
 using FitsArchiveLib.Interfaces;
+using FitsArchiveLib.Utils;
+using LinqToDB;
+using LinqToDB.Mapping;
+using Ninject.Infrastructure.Language;
 
 namespace FitsArchiveLib.Entities
 {
@@ -39,12 +46,21 @@ namespace FitsArchiveLib.Entities
             public int Count;
         }
 
+        private enum DataChange
+        {
+            Created,
+            Updated,
+            NotChanged
+        }
+
         public event AddStatusHandler OnAddStatusUpdated;
 
         public string DatabaseFile { get; private set; }
 
         public int FileCount => QueryFileCount();
-        private SQLiteConnection _connection;
+        // private SQLiteConnection _connection;
+        // private FitsDbContext _context;
+        private List<FitsDbContext> _dbContexts = new List<FitsDbContext>();
         private IFitsFileInfoService _fitsReader;
         private ILog _log;
 
@@ -62,18 +78,19 @@ namespace FitsArchiveLib.Entities
             {
                 DatabaseFile = databaseFilename;
                 CreateNewDatabase(databaseFilename);
-                Open();
             }
             else if (File.Exists(databaseFilename))
             {
                 DatabaseFile = databaseFilename;
                 try
                 {
-                    Open();
+                    using (Connection())
+                    {
+                    }
                 }
                 catch (Exception e)
                 {
-                    var err = "Failed to open the database file";
+                    var err = "Failed to read the database file";
                     _log?.Write(LogEventCategory.Error, err, e);
                     throw new FitsDatabaseException(err, e);
                 }                
@@ -90,7 +107,6 @@ namespace FitsArchiveLib.Entities
         public async Task AddFiles(IEnumerable<string> filePaths)
         {
             _log?.Write(LogEventCategory.Informational, $"Adding {filePaths.Count()} files to FITS database...");
-            Open();
             OnAddStatusUpdated?.Invoke(FileDbAddStatus.ReadingHeaders, null, 0, filePaths.Count());
             var fitsFiles = await ReadFitsFiles(filePaths);
             await InsertOrUpdateFitsFiles(fitsFiles.Where(ff => ff != null));
@@ -112,16 +128,17 @@ namespace FitsArchiveLib.Entities
             }));
             return await Task.WhenAll(awaitables);
         }
-        
-        private void Open()
+
+        private SQLiteConnection Connection() => new SQLiteConnection($"Data Source={DatabaseFile};");
+        private FitsDbContext Context()
         {
-            string connString = $"Data Source={DatabaseFile};Version=3;";
-            if(_connection == null)
-                _connection = new SQLiteConnection(connString);
-            if(_connection.State == ConnectionState.Closed || _connection.State == ConnectionState.Broken)
-                _connection.Open();
+            // Keep record of contexts, they'll need to be disposed in order to relinquish
+            // the database for renaming, deletion, etc. when the database gets closed/disposed.
+            var c = new FitsDbContext($"Data Source={DatabaseFile};");
+            _dbContexts.Add(c);
+            return c;
         }
-        
+
         private void CreateNewDatabase(string databaseFilename)
         {
             var asm = Assembly.GetAssembly(this.GetType());
@@ -139,17 +156,9 @@ namespace FitsArchiveLib.Entities
 
         private int QueryFileCount()
         {
-            Open();
-            var query = "SELECT COUNT(id) FROM Fits";
-            using (var cmd = new SQLiteCommand(query, _connection))
+            using (var context = Context())
             {
-                using (var reader = cmd.ExecuteReader())
-                {
-                    if (!reader.HasRows)
-                        return 0;
-                    reader.Read();
-                    return reader.GetInt32(0);
-                }
+                return context.Files.Count();
             }
         }
 
@@ -160,214 +169,195 @@ namespace FitsArchiveLib.Entities
                 return await Task.Run(() =>
                 {
                     IFitsFileInfo ff = _fitsReader.GetFitsFileInfo(filePath);
-                    readComplete?.Invoke(filePath);
+                    EventUtils.IgnoreExceptions(() => readComplete?.Invoke(filePath));
                     return ff;
                 });
             }
             catch (Exception e)
             {
                 _log?.Write(LogEventCategory.Error, "Reading FITS file info failed for file '{filePath}'", e);
-                readComplete?.Invoke(filePath);
+                EventUtils.IgnoreExceptions(() => readComplete?.Invoke(filePath));
             }            
             return null;
         }
 
         private async Task InsertOrUpdateFitsFiles(IEnumerable<IFitsFileInfo> fitsFiles)
         {
-            Open();
-
             int handled = 0;
             foreach (var ff in fitsFiles)
             {
                 try
                 {
-                    var checkExist = "SELECT id, checksum FROM Fits WHERE filename = @fn";
-                    long? fileId = null;
-                    string checksum = null;
-                    using (var cmd = new SQLiteCommand(checkExist, _connection))
-                    {
-                        cmd.Parameters.Add(new SQLiteParameter("fn", ff.FilePath));
-                        using (var reader = await cmd.ExecuteReaderAsync())
-                        {
-                            if (reader.HasRows)
-                            {
-                                reader.Read();
-                                fileId = reader.GetInt64(0);
-                                checksum = reader.GetString(1);
-                            }
-                        }
-                    }
-
-                    // Exists in database, and file contents have changed.
-                    // Requires an update.
-                    if (fileId != null && checksum != ff.FileHash)
-                    {
-                        await PerformFitsTableTransaction(ff, fileId);
-                        _log?.Write(LogEventCategory.Informational, 
-                            $"Read and indexed {ff.HeaderKeys.Count} keywords from " +
-                            $"a changed FITS file {Path.GetFileName(ff.FilePath)}");
-                    }
-                    // Does not exist in database; insert required.
-                    else if (fileId == null)
-                    {
-                        await PerformFitsTableTransaction(ff, null);
+                    var dataChange = await PerformFitsTableChangesTransaction(ff);
+                    if(dataChange == DataChange.Created)
                         _log?.Write(LogEventCategory.Informational,
                             $"Read and indexed {ff.HeaderKeys.Count} keywords from " +
                             $"a new FITS file {Path.GetFileName(ff.FilePath)}");
-                    }
-                    // If the file was present in the DB and checksum matches, nothing to do.
-                    else
-                    {
+                    else if (dataChange == DataChange.Updated)
                         _log?.Write(LogEventCategory.Informational,
-                            $"FITS file {Path.GetFileName(ff.FilePath)} is already indexed and has not changed, skipping.");
-                    }
+                            $"Read and indexed {ff.HeaderKeys.Count} keywords from " +
+                            $"a changed FITS file {Path.GetFileName(ff.FilePath)}");
+                    else
+                        _log?.Write(LogEventCategory.Informational,
+                            $"Read {Path.GetFileName(ff.FilePath)}, file was already indexed and unchanged");
+                    
                 }
                 catch (Exception e)
                 {
-                    var err = "Extraction of FITS file header keywords failed";
+                    var err = "Reading of file / extraction of FITS header keywords failed";
                     _log?.Write(LogEventCategory.Error, err, e);
                 }
 
                 handled++;
-                OnAddStatusUpdated?.Invoke(FileDbAddStatus.InsertingAndUpdating, ff.FilePath, handled, fitsFiles.Count());
+                EventUtils.IgnoreExceptions(() => OnAddStatusUpdated?.Invoke(FileDbAddStatus.InsertingAndUpdating, ff.FilePath, handled, fitsFiles.Count()));
             }
 
-            OnAddStatusUpdated?.Invoke(FileDbAddStatus.TransactionCompleted, null, handled, fitsFiles.Count());
+            EventUtils.IgnoreExceptions(() => OnAddStatusUpdated?.Invoke(FileDbAddStatus.TransactionCompleted, null, handled, fitsFiles.Count()));
+
         }
 
-        private async Task PerformFitsTableTransaction(IFitsFileInfo ff, long? fileId)
+        private async Task<DataChange> PerformFitsTableChangesTransaction(IFitsFileInfo ff)
         {
-            using (var transaction = _connection.BeginTransaction())
+            return await Task.Run(() =>
             {
-                using (var cmd = _connection.CreateCommand())
+                var opResult = DataChange.NotChanged;
+                using (var context = Context())
                 {
-                    cmd.Transaction = transaction;
-                    if (fileId != null)
+                    context.Connection.Open();
+                    using (var transaction = context.BeginTransaction())
                     {
-                        cmd.CommandText =
-                            "UPDATE Fits SET filename = @fn, checksum = @cs, size = $sz, date_indexed = @dt " +
-                            $"WHERE id = {fileId.Value}";
-                    }
-                    else
-                    {
-                        cmd.CommandText =
-                            "INSERT INTO Fits (filename, checksum, size, date_indexed) VALUES (@fn, @cs, @sz, @dt)";
-                    }
-                    var parameters = new[]
-                    {
-                        new SQLiteParameter("fn", ff.FilePath),
-                        new SQLiteParameter("cs", ff.FileHash),
-                        new SQLiteParameter("sz", ff.FileSize),
-                        new SQLiteParameter("dt", new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds())
-                    };
-                    cmd.Parameters.AddRange(parameters);
-                    await cmd.ExecuteNonQueryAsync();
-                }
+                        var fileTableChanges = false;
+                        var entry = context.Files.Where(x => x.Filename == ff.FilePath).ToList().FirstOrDefault();
+                        if (entry != null && entry.Checksum != ff.FileHash)
+                        {
+                            fileTableChanges = true;
+                            opResult = DataChange.Updated;
+                            entry.Checksum = ff.FileHash;
+                            entry.Size = ff.FileSize;
+                            entry.DateIndexed = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds();
+                        }
+                        else if(entry == null)
+                        {
+                            fileTableChanges = true;
+                            opResult = DataChange.Created;
+                            entry = new FitsTableRow()
+                            {
+                                Checksum = ff.FileHash,
+                                DateIndexed = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds(),
+                                Filename = ff.FilePath,
+                                Size = ff.FileSize
+                            };
 
-                using (var cmd = _connection.CreateCommand())
+                            entry.Id = context.InsertWithInt64Identity(entry);
+
+                        }
+                        
+                        if (fileTableChanges)
+                        {
+                            var createHeaderRow = false;
+                            var headers = context.HeadersIndexedTable.Where(x => x.FitsId == entry.Id).ToList().FirstOrDefault();
+                            if (headers == null)
+                            {
+                                createHeaderRow = true;
+                                headers = new FitsHeaderIndexedRow()
+                                {
+                                    FitsId = entry.Id.Value
+                                };
+                            }
+                            var headerProps = typeof(FitsHeaderIndexedRow).GetProperties()
+                                .Where(
+                                    x =>
+                                        x.HasAttribute<SingleValueFitsFieldAttribute>() ||
+                                        x.HasAttribute<MultiValueFitsFieldAttribute>());
+
+                            foreach (var prop in headerProps)
+                            {
+                                var dbColAndHeaderName = prop.GetCustomAttribute<ColumnAttribute>().Name;
+                                if (!ff.HeaderKeys.Contains(dbColAndHeaderName))
+                                    continue;
+                                var updatedVal = prop.HasAttribute(typeof(MultiValueFitsFieldAttribute))
+                                    ? string.Join("\n",
+                                        ff.GetHeaderMultiValue(dbColAndHeaderName).Select(kv => kv.Value ?? kv.Comment))
+                                    : ff.GetSingleHeaderValue(dbColAndHeaderName).Value;
+                                prop.SetValue(headers, CoerceValue(prop, updatedVal));
+                            }
+
+                            if (createHeaderRow)
+                                context.Insert(headers);
+                        }
+
+                        transaction.Commit();
+                    }
+
+                }
+                return opResult;
+
+            });
+
+        }
+
+        /// <summary>
+        /// This is a bit stupid, but found no way to assign nullables values
+        /// using reflection.
+        /// </summary>
+        /// <param name="prop"></param>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        private object CoerceValue(PropertyInfo prop, object value)
+        {
+            var nullableInnerType = Nullable.GetUnderlyingType(prop.PropertyType);
+            if (nullableInnerType != null)
+            {
+                if (typeof(int) == nullableInnerType)
                 {
-                    var fitsId = fileId ?? _connection.LastInsertRowId;
-                    cmd.Transaction = transaction;
-                    var indexedKeywords = ConstructIndexedKeywordDictionary(ff);
-                    if (fileId != null)
-                    {
-                        cmd.CommandText = $"UPDATE FitsHeaderIndexed SET " +
-                                          string.Join(", ", indexedKeywords.Select(kw => $"'{kw.Key}'=@{SafeParamName(kw.Key)}")) +
-                                          $" WHERE fits_id = {fileId.Value}";
-                    }
-                    else
-                    {
-                        cmd.CommandText = $"INSERT INTO FitsHeaderIndexed (fits_id, {string.Join(",", indexedKeywords.Keys.Select(k => $"'{k}'"))}) " +
-                                          $"VALUES ({fitsId}, {string.Join(",", indexedKeywords.Keys.Select(k => "@" + SafeParamName(k)))})";
-                    }
-                    
-                    var parameters = indexedKeywords.Select(kw => new SQLiteParameter(SafeParamName(kw.Key), kw.Value)).ToArray();
-                    cmd.Parameters.AddRange(parameters);
-                    await cmd.ExecuteNonQueryAsync();
+                    int? x = (int)(value is int ? (int)value : value is double ? (double)value : (long)value);
+                    return x;
                 }
-
-                transaction.Commit();                
+                if (typeof(double) == nullableInnerType)
+                {
+                    double? x = (double)(value is int ? (int)value : value is double ? (double)value : (long)value);
+                    return x;
+                }
+                if (typeof(long) == nullableInnerType)
+                {
+                    long? x = (long)(value is int ? (int)value : value is double ? (double)value : (long)value);
+                    return x;
+                }
+                if (typeof(bool) == nullableInnerType)
+                {
+                    bool? x = (bool)value;
+                    return x;
+                }
             }
+            return value;
         }
-
-        private string SafeParamName(string p)
-        {
-            return Regex.Replace(p, "[^a-zA-Z0-9_]+", "", RegexOptions.Compiled);
-        }
-
-        private Dictionary<string, object> ConstructIndexedKeywordDictionary(IFitsFileInfo ff)
-        {
-            var keys = ff.HeaderKeys;
-            var keywords = new string[]
-            {
-                "AUTHOR",
-                "BITPIX",
-                "NAXIS1",
-                "NAXIS2",
-                "INSTRUME",
-                "TELESCOP",
-                "OBSERVER",
-                "EXPTIME",
-                "EXPOSURE",
-                "GAIN",
-                "CCD-TEMP",
-                "XBINNING",
-                "YBINNING",
-                "FRAME",
-                "FILTER",
-                "FOCALLEN",
-                "OBJECT",
-                "OBJCTRA",
-                "OBJCTDEC",
-                "RA",
-                "DEC",
-                "RA_OBJ",
-                "DEC_OBJ",
-                "SITELAT",
-                "SITELONG",
-                "LATITUDE",
-                "EQUINOX",
-                "APERTURE",
-                "TIME-OBS",
-                "TIME-END",
-                "DATE-OBS",
-                "DATE-END",
-                "AIRMASS",
-                "PROGRAM",
-                "SWCREATE",
-                "OBJNAME"
-            };
-            var kvps = keywords.Select(
-                kw => new KeyValuePair<string, object>(kw, keys.Contains(kw) ? ff.GetSingleHeaderValue(kw).Value : null));
-            var indexedKeywords = new Dictionary<string, object>();
-            foreach (var kvp in kvps)
-            {
-                indexedKeywords.Add(kvp.Key, kvp.Value);
-            }
-
-            if (keys.Contains("COMMENT"))
-            {
-                var comment = string.Join("\n", ff.GetHeaderMultiValue("COMMENT").Select(kv => kv.Comment));
-                indexedKeywords.Add("COMMENT", comment);
-            }
-            return indexedKeywords;
-            
-        }
-
+        
+        
         public void Dispose()
         {
-            _connection?.Dispose();
+            _dbContexts.ForEach(c => c.Dispose());
         }
 
-        
+        public IQueryable<FitsTableRow> FileListAsQueryable()
+        {
+            // Note: "leaks" contexts. This instance will keep record or produced
+            // contexts in order to dispose of them when the database gets disposed.
+            return Context().Files.AsQueryable();
+        }
 
-        //public static FitsDatabase FromFile(string filename)
-        //{
-        //    var connString = $"{filename};Version=3;";
-        //    using (SQLiteConnection conn = new SQLiteConnection(connString))
-        //    {
-        //        conn.Open();
-        //    }
-        //}
+        public IQueryable<FitsHeaderIndexedRow> HeadersIndexedAsQueryable()
+        {
+            // Note: "leaks" contexts. This instance will keep record or produced
+            // contexts in order to dispose of them when the database gets disposed.
+            return Context().HeadersIndexedTable.AsQueryable();
+        }
+
+        public IQueryable<PlateSolvesTable> PlateSolvesAsQueryable()
+        {
+            // Note: "leaks" contexts. This instance will keep record or produced
+            // contexts in order to dispose of them when the database gets disposed.
+            return Context().PlateSolvesTable.AsQueryable();
+        }
+
     }
 }
