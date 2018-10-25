@@ -12,6 +12,8 @@
              d:DesignHeight="34" d:DesignWidth="800">
     <UserControl.Resources>
         <converters:QueryParamTypeToVisConverter x:Key="QpVisConv"></converters:QueryParamTypeToVisConverter>
+        <converters:BasicVisibilityConverter x:Key="BasicVisConv"></converters:BasicVisibilityConverter>
+        <converters:BoolInverter x:Key="BoolInverter"></converters:BoolInverter>
     </UserControl.Resources>
     <Grid d:DataContext="{d:DesignInstance Type=viewModels:QueryParameterViewModel}">
         <DockPanel Margin="5,5,5,5" Grid.RowSpan="1" VerticalAlignment="Top">
@@ -22,52 +24,85 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{utils:Loc query_keyword_or_property}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8,0,8,0"></TextBlock>
-                    <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="150" Margin="0,0,8,0"></ComboBox>
+                    <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="150" Margin="0,0,8,0" SelectedIndex="0" ItemsSource="{Binding QueryComboItems}">
+                        <ComboBox.ItemContainerStyle>
+                            <Style TargetType="ComboBoxItem">
+                                <Setter Property="IsEnabled" Value="{Binding IsHeader, Converter={StaticResource BoolInverter}}"></Setter>
+                            </Style>
+                        </ComboBox.ItemContainerStyle>
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Vertical">
+                                    <StackPanel Orientation="Vertical"  Visibility="{Binding IsHeader, Converter={StaticResource BasicVisConv}}">
+                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="2,5,0,0"></TextBlock>
+                                        <Rectangle Fill="Black" Height="1" Margin="2,2,0,8"></Rectangle>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Vertical" Visibility="{Binding IsHeader, Converter={StaticResource BasicVisConv}, ConverterParameter=False}">
+                                        <TextBlock Text="{Binding Name}" Margin="8,0,0,0"></TextBlock>
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
 
-                    <Grid Name="TextInputField" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.TextField}}" VerticalAlignment="Center">
-                        <TextBox VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="300" Padding="0"></TextBox>
+                    <Grid Name="TextInputField" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.Text}}" VerticalAlignment="Center">
+                        <TextBox Text="{Binding QueryFieldText, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="300" Padding="0"></TextBox>
                     </Grid>
-                    <Grid Name="RaDecFields" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.RaDec}}">
+                    <Grid Name="RangeField" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.TextRange}}" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="between" Margin="0,0,8,0"></TextBlock>
+                            <TextBox Text="{Binding QueryFieldTextRangeStart, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="120" Padding="0"></TextBox>
+                            <TextBlock Text="and" Margin="8,0,8,0"></TextBlock>
+                            <TextBox Text="{Binding QueryFieldTextRangeEnd, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="120" Padding="0"></TextBox>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Name="RaDecFields" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.RaDec}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="RA:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <TextBox MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="RaBox">
+                            <TextBox Text="{Binding QueryFieldRa, UpdateSourceTrigger=PropertyChanged}" MinWidth="100" Margin="0,0,8,0" VerticalAlignment="Center" Name="RaBox">
                                 <utils:WatermarkService.Watermark>
                                     <TextBlock Text="{utils:Loc query_ra_placeholder}" Padding="4,0,0,0" VerticalAlignment="Center"></TextBlock>
                                 </utils:WatermarkService.Watermark>
                             </TextBox>
                             <TextBlock Text="Dec:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <TextBox MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="DecBox">
+                            <TextBox Text="{Binding QueryFieldDec, UpdateSourceTrigger=PropertyChanged}" MinWidth="100" Margin="0,0,8,0" VerticalAlignment="Center" Name="DecBox">
                                 <utils:WatermarkService.Watermark>
                                     <TextBlock Text="{utils:Loc query_dec_placeholder}" Padding="4,0,0,0" VerticalAlignment="Center"></TextBlock>
                                 </utils:WatermarkService.Watermark>
                             </TextBox>
+                            <TextBlock Text="Radius:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
+                            <TextBox Text="{Binding QueryFieldDec, UpdateSourceTrigger=PropertyChanged}" MinWidth="50" Margin="0,0,8,0" VerticalAlignment="Center" Name="RaDecRadiusBox">
+                                <utils:WatermarkService.Watermark>
+                                    <TextBlock Text="{utils:Loc query_radius_arcmin_placeholder}" Padding="4,0,0,0" VerticalAlignment="Center"></TextBlock>
+                                </utils:WatermarkService.Watermark>
+                            </TextBox>
                         </StackPanel>
                     </Grid>
-                    <Grid Name="XyFields" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.Xy}}">
+                    <Grid Name="XyFields" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.Xy}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="X:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <TextBox MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="XBox"></TextBox>
+                            <TextBox Text="{Binding QueryFieldX, UpdateSourceTrigger=PropertyChanged}" MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="XBox"></TextBox>
                             <TextBlock Text="Y:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <TextBox MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="YBox"></TextBox>
+                            <TextBox Text="{Binding QueryFieldY, UpdateSourceTrigger=PropertyChanged}" MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="YBox"></TextBox>
                         </StackPanel>
                     </Grid>
-                    <Grid Name="LatitudeField" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.Latitude}}">
+                    <Grid Name="LatitudeField" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.Latitude}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <ComboBox Name="LatitudeGtLt" Width="50" Margin="0,0,8,0"></ComboBox>
                             <TextBlock Text="{utils:Loc query_latitude}" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <TextBox MinWidth="200" Margin="0,0,8,0" VerticalAlignment="Center" Name="LatBox">
+                            <TextBox Text="{Binding QueryFieldLat, UpdateSourceTrigger=PropertyChanged}" MinWidth="200" Margin="0,0,8,0" VerticalAlignment="Center" Name="LatBox">
                                 <utils:WatermarkService.Watermark>
                                     <TextBlock Text="{utils:Loc query_latitude_placeholder}" Padding="4,0,0,0" VerticalAlignment="Center"></TextBlock>
                                 </utils:WatermarkService.Watermark>
                             </TextBox>
                         </StackPanel>
                     </Grid>
-                    <Grid Name="TimePeriodFields" Visibility="{Binding QueryType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:QType.TimePeriod}}">
+                    <Grid Name="TimePeriodFields" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.TimeRange}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="Between:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <DatePicker VerticalAlignment="Center"></DatePicker>
+                            <DatePicker Text="{Binding QueryFieldTimeStart, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"></DatePicker>
                             <TextBlock Text="-" VerticalAlignment="Center" Margin="8,0"></TextBlock>
-                            <DatePicker VerticalAlignment="Center"></DatePicker>
+                            <DatePicker Text="{Binding QueryFieldTimeEnd, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"></DatePicker>
                         </StackPanel>
                     </Grid>
                 </StackPanel>

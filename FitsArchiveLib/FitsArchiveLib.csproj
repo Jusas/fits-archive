@@ -74,8 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Attributes\SingleValueFitsFieldAttribute.cs" />
-    <Compile Include="Attributes\MultiValueFitsFieldAttribute.cs" />
+    <Compile Include="Attributes\FitsFieldAttribute.cs" />
     <Compile Include="Database\FitsDbContext.cs" />
     <Compile Include="Database\FitsHeaderIndexedRow.cs" />
     <Compile Include="Database\FitsTableRow.cs" />

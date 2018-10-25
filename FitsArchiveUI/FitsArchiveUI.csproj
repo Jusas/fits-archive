@@ -25,6 +25,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -105,6 +106,8 @@
     <Compile Include="ViewModels\ViewModelProvider.cs" />
     <Compile Include="ViewModels\ViewModelsModule.cs" />
     <Compile Include="ViewModels\IViewModel.cs" />
+    <Compile Include="Views\Converters\BasicVisibilityConverter.cs" />
+    <Compile Include="Views\Converters\BoolInverter.cs" />
     <Compile Include="Views\Converters\QueryParamTypeToVisConverter.cs" />
     <Compile Include="Views\ITabItem.cs" />
     <Compile Include="Views\IUserControl.cs" />

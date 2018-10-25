@@ -265,17 +265,15 @@ namespace FitsArchiveLib.Entities
                                 };
                             }
                             var headerProps = typeof(FitsHeaderIndexedRow).GetProperties()
-                                .Where(
-                                    x =>
-                                        x.HasAttribute<SingleValueFitsFieldAttribute>() ||
-                                        x.HasAttribute<MultiValueFitsFieldAttribute>());
+                                .Where(x => x.HasAttribute<FitsFieldAttribute>());
 
                             foreach (var prop in headerProps)
                             {
-                                var dbColAndHeaderName = prop.GetCustomAttribute<ColumnAttribute>().Name;
+                                var fitsFieldAttr = prop.GetCustomAttribute<FitsFieldAttribute>();
+                                var dbColAndHeaderName = fitsFieldAttr.Name;
                                 if (!ff.HeaderKeys.Contains(dbColAndHeaderName))
                                     continue;
-                                var updatedVal = prop.HasAttribute(typeof(MultiValueFitsFieldAttribute))
+                                var updatedVal = fitsFieldAttr.MultiValue
                                     ? string.Join("\n",
                                         ff.GetHeaderMultiValue(dbColAndHeaderName).Select(kv => kv.Value ?? kv.Comment))
                                     : ff.GetSingleHeaderValue(dbColAndHeaderName).Value;

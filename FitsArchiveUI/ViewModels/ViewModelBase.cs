@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using FitsArchiveLib.Interfaces;
@@ -66,13 +67,13 @@ namespace FitsArchiveUI.ViewModels
         {
         }
 
-        protected void SetNotifyingProperty<T>(Expression<Func<T>> expression, ref T field, T value)
+        protected void SetNotifyingProperty<T>(string propName, ref T field, T value)
         {
             if (field == null || !field.Equals(value))
             {
                 T oldValue = field;
                 field = value;
-                OnPropertyChanged(this, new PropertyChangedExtendedEventArgs<T>(GetPropertyName(expression), oldValue, value));
+                OnPropertyChanged(this, new PropertyChangedExtendedEventArgs<T>(propName, oldValue, value));
             }
         }
 
@@ -80,15 +81,22 @@ namespace FitsArchiveUI.ViewModels
         /// A notification method for a property that doesn't have a backing field.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="expression"></param>
+        /// <param name="propName"></param>
         /// <param name="value"></param>
-        protected void SetNotifyingProperty<T>(Expression<Func<T>> expression, T value)
+        protected void SetNotifyingProperty<T>(string propName, T value)
         {
-            var oldValue = expression.Compile().Invoke();
-            if (!oldValue.Equals(value))
-            {
-                OnPropertyChanged(this, new PropertyChangedExtendedEventArgs<T>(GetPropertyName(expression), oldValue, value));
-            }
+            var property = this.GetType().GetProperty(propName);
+            var oldValue = (T)property.GetValue(this);
+            property.SetValue(this, value);
+            //var prop = Expression.Parameter(GetType(), "x");
+            //var body = Expression.PropertyOrField(prop, propName);
+            //var funcType = typeof(Func<,>).MakeGenericType(GetType(), typeof(T));
+            //var lambda = Expression.Lambda(funcType, body, prop);
+            //var oldValue = (T)lambda.Compile().DynamicInvoke(this);
+            //var property = (lambda.Body as MemberExpression).Member as PropertyInfo;
+            // property.SetValue(this, value);
+
+            OnPropertyChanged(this, new PropertyChangedExtendedEventArgs<T>(propName, oldValue, value));        
         }
 
         protected void SetNotifyingProperty<T>(Expression<Func<T>> expression)
@@ -96,6 +104,7 @@ namespace FitsArchiveUI.ViewModels
             OnPropertyChanged(this, new PropertyChangedEventArgs(GetPropertyName(expression)));
         }
 
+        // Deprecated
         protected string GetPropertyName<T>(Expression<Func<T>> expression)
         {
             MemberExpression memberExpression = (MemberExpression)expression.Body;

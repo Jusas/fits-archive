@@ -104,5 +104,14 @@ namespace FitsArchiveUI.Properties {
                 return ResourceManager.GetString("query_ra_placeholder", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to arcmin.
+        /// </summary>
+        internal static string query_radius_arcmin_placeholder {
+            get {
+                return ResourceManager.GetString("query_radius_arcmin_placeholder", resourceCulture);
+            }
+        }
     }
 }

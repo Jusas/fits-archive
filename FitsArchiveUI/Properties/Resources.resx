@@ -129,6 +129,9 @@
   <data name="query_latitude_placeholder" xml:space="preserve">
     <value>00 00 00.0000 N/S or 00.000000</value>
   </data>
+  <data name="query_radius_arcmin_placeholder" xml:space="preserve">
+    <value>arcmin</value>
+  </data>
   <data name="query_ra_placeholder" xml:space="preserve">
     <value>00 00 00.00 or 00.00000</value>
   </data>

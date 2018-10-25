@@ -32,9 +32,6 @@ namespace FitsArchiveUI
         {
             ViewModel = viewModel;
             InitializeComponent();
-            var logStream = new MemoryStream();
-            var log = logService.InitializeLog("all", logStream);
-            _database = new FitsDatabase(new FitsFileInfoService(), log, @"C:\tmp\fitstestdb.db", true);
         }
 
         private async void RunButton_Click(object sender, RoutedEventArgs e)

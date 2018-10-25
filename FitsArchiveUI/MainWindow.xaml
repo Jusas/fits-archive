@@ -52,7 +52,7 @@
                 
                 <Separator />
 
-                <Button ToolTip="New query" Style="{StaticResource ToolbarButton}" IsEnabled="False">
+                <Button ToolTip="New query" Style="{StaticResource ToolbarButton}" IsEnabled="{Binding IsDbOpen}" Command="{Binding NewQueryTabCommand}">
                     <fa:ImageAwesome Icon="SearchPlus" Width="24"></fa:ImageAwesome>
                 </Button>
                 <Button ToolTip="Update archive, scans all directories that are included in the archive" Style="{StaticResource ToolbarButton}" IsEnabled="False">
@@ -71,7 +71,7 @@
 
             </ToolBar>
 
-            <TabControl Grid.Row="2" ItemsSource="{Binding QueryTabs}">
+            <TabControl Grid.Row="2" ItemsSource="{Binding QueryTabs}" SelectedIndex="0">
                 <TabControl.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">

@@ -4,23 +4,15 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Data;
-using FitsArchiveUI.ViewModels;
 
 namespace FitsArchiveUI.Views.Converters
 {
-    class QueryParamTypeToVisConverter : IValueConverter
+    class BoolInverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is FieldType && parameter is FieldType)
-            {
-                return ((FieldType) value) == ((FieldType) parameter)
-                    ? Visibility.Visible
-                    : Visibility.Collapsed;
-            }
-            return Visibility.Collapsed;
+            return !(bool)value;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
