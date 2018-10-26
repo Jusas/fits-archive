@@ -17,13 +17,13 @@ namespace FitsArchiveLib.Database
         [Column(Name = "AUTHOR"), FitsField(Name = "AUTHOR")]
         public string Author { get; set; }
 
-        [Column(Name = "BITPIX"), FitsField(Name = "BITPIX", VarianceValue = true)]
+        [Column(Name = "BITPIX"), FitsField(Name = "BITPIX", Numeric = true)]
         public int? Bitpix { get; set; }
 
-        [Column(Name = "NAXIS1"), FitsField(Name = "NAXIS1", VarianceValue = true)]
+        [Column(Name = "NAXIS1"), FitsField(Name = "NAXIS1", Numeric = true)]
         public int? Naxis1 { get; set; }
 
-        [Column(Name = "NAXIS2"), FitsField(Name = "NAXIS2", VarianceValue = true)]
+        [Column(Name = "NAXIS2"), FitsField(Name = "NAXIS2", Numeric = true)]
         public int? Naxis2 { get; set; }
 
         [Column(Name = "COMMENT"), FitsField(Name = "COMMENT", MultiValue = true)]
@@ -98,7 +98,7 @@ namespace FitsArchiveLib.Database
         [Column(Name = "EQUINOX"), FitsField(Name = "EQUINOX", VarianceValue = true)]
         public double? Equinox { get; set; }
 
-        [Column(Name = "APERTURE"), FitsField(Name = "APERTURE", VarianceValue = true)]
+        [Column(Name = "APERTURE"), FitsField(Name = "APERTURE", Numeric = true)]
         public double? Aperture { get; set; }
 
         [Column(Name = "TIME-OBS"), FitsField(Name = "TIME-OBS", DateLike = true)]

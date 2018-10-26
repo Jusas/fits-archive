@@ -24,7 +24,7 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{utils:Loc query_keyword_or_property}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8,0,8,0"></TextBlock>
-                    <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="150" Margin="0,0,8,0" SelectedIndex="0" ItemsSource="{Binding QueryComboItems}">
+                    <ComboBox VerticalAlignment="Center" HorizontalAlignment="Left" MinWidth="150" Margin="0,0,8,0" SelectedIndex="{Binding SelectedQueryTypeIndex}" ItemsSource="{Binding QueryComboItems}">
                         <ComboBox.ItemContainerStyle>
                             <Style TargetType="ComboBoxItem">
                                 <Setter Property="IsEnabled" Value="{Binding IsHeader, Converter={StaticResource BoolInverter}}"></Setter>
@@ -32,7 +32,7 @@
                         </ComboBox.ItemContainerStyle>
                         <ComboBox.ItemTemplate>
                             <DataTemplate>
-                                <StackPanel Orientation="Vertical">
+                                <StackPanel Orientation="Vertical" ToolTip="{Binding ToolTip}">
                                     <StackPanel Orientation="Vertical"  Visibility="{Binding IsHeader, Converter={StaticResource BasicVisConv}}">
                                         <TextBlock Text="{Binding Name}" FontWeight="Bold" Margin="2,5,0,0"></TextBlock>
                                         <Rectangle Fill="Black" Height="1" Margin="2,2,0,8"></Rectangle>
@@ -84,6 +84,13 @@
                             <TextBox Text="{Binding QueryFieldX, UpdateSourceTrigger=PropertyChanged}" MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="XBox"></TextBox>
                             <TextBlock Text="Y:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
                             <TextBox Text="{Binding QueryFieldY, UpdateSourceTrigger=PropertyChanged}" MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="YBox"></TextBox>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Name="TextVarianceFields" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.TextVariance}}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBox Text="{Binding QueryFieldText, UpdateSourceTrigger=PropertyChanged}" MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="VaryingTextBox"></TextBox>
+                            <TextBlock Text="Variance:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
+                            <TextBox Text="{Binding QueryFieldVariance, UpdateSourceTrigger=PropertyChanged}" MinWidth="100" Margin="0,0,8,0" VerticalAlignment="Center" Name="VaryingTextVarianceBox"></TextBox>
                         </StackPanel>
                     </Grid>
                     <Grid Name="LatitudeField" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.Latitude}}">
