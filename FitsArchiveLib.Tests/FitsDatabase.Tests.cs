@@ -105,8 +105,8 @@ namespace FitsArchiveLib.Tests
                 var fitsFilePath = Path.Combine(TestUtils.GetTestPath(), "Resources", "FitsFiles", "Light_001.fits");
                 await newFitsDb.AddFiles(new[] { fitsFilePath });
                 // var queryable = newFitsDb.FileListAsQueryable();
-                var queryRes = newFitsDb.FileListAsQueryable().ToList();
-                Assert.AreEqual(1, queryRes.Count);
+                var fcount = newFitsDb.RunQuery(null);
+                Assert.AreEqual(1, fcount);
             }
         }
     }

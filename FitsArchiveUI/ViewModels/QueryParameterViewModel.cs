@@ -8,8 +8,6 @@ using FitsArchiveLib.Attributes;
 using FitsArchiveLib.Database;
 using FitsArchiveLib.Interfaces;
 using FitsArchiveUI.Utils;
-using LinqToDB.Mapping;
-using Ninject.Infrastructure.Language;
 
 namespace FitsArchiveUI.ViewModels
 {
@@ -25,24 +23,6 @@ namespace FitsArchiveUI.ViewModels
         TimeRange
     }
 
-    //public abstract class QueryComboItem
-    //{
-    //    public abstract bool IsHeader { get; }
-    //    public abstract string Name { get; }
-    //    public abstract string ToolTip { get; }
-    //}
-
-    //public class QueryComboHeader : QueryComboItem
-    //{
-    //    public QueryComboHeader(string name)
-    //    {
-    //        Name = name;
-    //    }
-    //    public override bool IsHeader => true;
-    //    public override string Name { get; }
-    //    public override string ToolTip { get; }
-    //}
-
     public class QueryComboItemRow
     {
         public QueryComboItemRow(string name, string tooltip, bool isHeader, FieldType inputFieldType)
@@ -57,6 +37,17 @@ namespace FitsArchiveUI.ViewModels
         public string ToolTip { get; }
         public FieldType InputFieldType { get; }
     }
+
+    //public class QueryClause
+    //{
+    //    public IndexedFitsKeyword FitsKeyword;
+    //    public 
+    //}
+
+    //public class BuiltQuery
+    //{
+        
+    //}
     
     /// <summary>
     /// Pairs with QueryParameterView, which is a visual representation of a query parameter.
@@ -80,44 +71,92 @@ namespace FitsArchiveUI.ViewModels
             get => _queryFieldText;
             set => SetNotifyingProperty(nameof(QueryFieldText), ref _queryFieldText, value);
         }
-        public string QueryFieldTextRangeStart { get; set; }
-        public string QueryFieldTextRangeEnd { get; set; }
-        public string QueryFieldRa { get; set; }
-        public string QueryFieldDec { get; set; }
-        public string QueryFieldRaDecRadius { get; set; }
-        public string QueryFieldX { get; set; }
-        public string QueryFieldY { get; set; }
-        public string QueryFieldLat { get; set; }
-        public string QueryFieldTimeStart { get; set; }
-        public string QueryFieldTimeEnd { get; set; }
-        public string QueryFieldVariance { get; set; }
+
+        private string _queryFieldTextRangeStart;
+        public string QueryFieldTextRangeStart
+        {
+            get => _queryFieldTextRangeStart;
+            set => SetNotifyingProperty(nameof(QueryFieldTextRangeStart), ref _queryFieldTextRangeStart, value);
+        }
+
+        private string _queryFieldTextRangeEnd;
+        public string QueryFieldTextRangeEnd
+        {
+            get => _queryFieldTextRangeEnd;
+            set => SetNotifyingProperty(nameof(QueryFieldTextRangeEnd), ref _queryFieldTextRangeEnd, value);
+        }
+
+        private string _queryFieldRa;
+        public string QueryFieldRa
+        {
+            get => _queryFieldRa;
+            set => SetNotifyingProperty(nameof(QueryFieldRa), ref _queryFieldRa, value);
+        }
+
+        private string _queryFieldDec;
+        public string QueryFieldDec
+        {
+            get => _queryFieldDec;
+            set => SetNotifyingProperty(nameof(QueryFieldDec), ref _queryFieldDec, value);
+        }
+
+        private string _queryFieldRaDecRadius;
+        public string QueryFieldRaDecRadius
+        {
+            get => _queryFieldRaDecRadius;
+            set => SetNotifyingProperty(nameof(QueryFieldRaDecRadius), ref _queryFieldRaDecRadius, value);
+        }
+
+        private string _queryFieldX;
+        public string QueryFieldX
+        {
+            get => _queryFieldX;
+            set => SetNotifyingProperty(nameof(QueryFieldX), ref _queryFieldX, value);
+        }
+
+        private string _queryFieldY;
+        public string QueryFieldY
+        {
+            get => _queryFieldY;
+            set => SetNotifyingProperty(nameof(QueryFieldY), ref _queryFieldY, value);
+        }
+
+        private string _queryFieldLat;
+        public string QueryFieldLat
+        {
+            get => _queryFieldLat;
+            set => SetNotifyingProperty(nameof(QueryFieldLat), ref _queryFieldLat, value);
+        }
+
+        private string _queryFieldTimeStart;
+        public string QueryFieldTimeStart
+        {
+            get => _queryFieldTimeStart;
+            set => SetNotifyingProperty(nameof(QueryFieldTimeStart), ref _queryFieldTimeStart, value);
+        }
+
+        private string _queryFieldTimeEnd;
+        public string QueryFieldTimeEnd
+        {
+            get => _queryFieldTimeEnd;
+            set => SetNotifyingProperty(nameof(QueryFieldTimeEnd), ref _queryFieldTimeEnd, value);
+        }
+
+        private string _queryFieldVariance;
+        public string QueryFieldVariance
+        {
+            get => _queryFieldVariance;
+            set => SetNotifyingProperty(nameof(QueryFieldVariance), ref _queryFieldVariance, value);
+        }
 
         private int _selectedQueryTypeIndex = 1;
-
         public int SelectedQueryTypeIndex
         {
             get => _selectedQueryTypeIndex;
             set => SetNotifyingProperty(nameof(SelectedQueryTypeIndex), ref _selectedQueryTypeIndex, value);
         }
 
-        static QueryParameterViewModel()
-        {
-            var fitsTableProperties = typeof(FitsHeaderIndexedRow).GetProperties()
-                .Where(p => p.HasAttribute<FitsFieldAttribute>());
-
-            //foreach (var fitsTableProperty in fitsTableProperties)
-            //{
-            //    var query = new QueryType()
-            //    {
-            //        Category = "Specific FITS keyword",
-            //        FieldType = FieldType.Text,
-            //    }
-            //    fitsTableProperty.GetCustomAttribute<FitsFieldAttribute>().Name;
-
-
-            //}
-        }
-
+        
         public QueryParameterViewModel(ILog log) : base(log)
         {
             // TODO: textfields should have "like" combobox, ie. get distinct values for the keyword and suggest "autocomplete" style as user types.
@@ -133,22 +172,24 @@ namespace FitsArchiveUI.ViewModels
                 new QueryComboItemRow("Specific FITS keywords", "", true, FieldType.None)
             };
 
-            var fitsKeywords = typeof(FitsHeaderIndexedRow).GetProperties()
-                .Where(p => p.HasAttribute<FitsFieldAttribute>()).Select(x => x.GetCustomAttribute<FitsFieldAttribute>());
+
+            var fitsKeywords = FitsDatabaseDescription.IndexedFitsKeywords;
             foreach (var kw in fitsKeywords)
             {
                 var fieldType = FieldType.Text;
-                if (kw.DateLike)
+                if (kw.ValueType == KeywordValueType.Date)
                     fieldType = FieldType.TimeRange;
-                if (kw.VarianceValue)
+                if ((kw.QueryHints & KeywordQueryHints.VarianceValue) != 0)
                     fieldType = FieldType.TextVariance;
 
-                var row = new QueryComboItemRow(kw.Name, kw.Name, false, fieldType);
+                var row = new QueryComboItemRow(kw.Keyword, kw.Keyword, false, fieldType);
                 QueryComboItems.Add(row);
             }
 
             PropertyChanged += OnQueryTypeIndexPropertyChange;
         }
+
+        // todo: GetAsQuery - maybe as an expression?
 
         private void OnQueryTypeIndexPropertyChange(object sender, PropertyChangedEventArgs ea)
         {

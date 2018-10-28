@@ -4,7 +4,7 @@ using LinqToDB.Mapping;
 namespace FitsArchiveLib.Database
 {
     [Table(Name = "PlateSolves")]
-    public class PlateSolvesTable
+    internal class PlateSolveRow
     {
         [Column(Name = "id"), PrimaryKey, Identity]
         public long Id { get; set; }
@@ -12,23 +12,23 @@ namespace FitsArchiveLib.Database
         [Column(Name = "fits_id")]
         public long FitsId { get; set; }
 
-        [Column(Name = "solved_date")]
+        [Column(Name = "solved_date"), Nullable]
         public long? SolvedDate { get; set; }
 
-        [Column(Name = "orientation")]
+        [Column(Name = "orientation"), Nullable]
         public double? Orientation { get; set; }
 
-        [Column(Name = "pixscale")]
+        [Column(Name = "pixscale"), Nullable]
         public double? PixScale { get; set; }
 
-        [Column(Name = "radius")]
+        [Column(Name = "radius"), Nullable]
         public double? Radius { get; set; }
 
-        [Column(Name = "center_ra")]
+        [Column(Name = "center_ra"), Nullable]
         public double? CenterRa { get; set; }
 
-        [Column(Name = "center_dec")]
-        public double CenterDec { get; set; }
+        [Column(Name = "center_dec"), Nullable]
+        public double? CenterDec { get; set; }
 
     }
 }

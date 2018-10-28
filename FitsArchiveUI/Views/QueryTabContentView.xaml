@@ -19,10 +19,21 @@
         </Grid.RowDefinitions>
         
         <ScrollViewer Grid.Row="0" MaxHeight="{Binding ElementName=QueryGrid, Path=RowDefinitions[0].MaxHeight}">
-            <ItemsControl ItemsSource="{Binding QueryParams}">
+            <ItemsControl ItemsSource="{Binding QueryParams}" AlternationCount="100">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type viewModels:QueryParameterViewModel}">
-                        <local:QueryParameterView></local:QueryParameterView>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="1*"></ColumnDefinition>
+                                <ColumnDefinition Width="50"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <local:QueryParameterView></local:QueryParameterView>
+                            <Button Grid.Column="1" Height="24" Command="{Binding ElementName=QueryGrid, Path=DataContext.RemoveQueryParamCommand}" 
+                                    CommandParameter="{Binding Path=(ItemsControl.AlternationIndex), RelativeSource={RelativeSource TemplatedParent}}">
+                                <fa:ImageAwesome Icon="MinusCircle" Margin="2"></fa:ImageAwesome>
+                            </Button>
+                        </Grid>
+                        
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
@@ -35,7 +46,7 @@
                 <ColumnDefinition Width="1*"></ColumnDefinition>
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="12,4,8,4" Height="26">
-                <Button ToolTip="Add query parameter" Margin="0,0,12,0" Height="{Binding Parent.Height, RelativeSource={RelativeSource Self}}">
+                <Button Command="{Binding AddQueryParamCommand}" ToolTip="Add query parameter" Margin="0,0,12,0" Height="{Binding Parent.Height, RelativeSource={RelativeSource Self}}">
                     <fa:ImageAwesome Icon="PlusCircle" Margin="4" Height="Auto"></fa:ImageAwesome>
                 </Button>
                 <Button Height="{Binding Parent.Height, RelativeSource={RelativeSource Self}}">

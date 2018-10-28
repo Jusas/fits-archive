@@ -20,7 +20,6 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1*"></ColumnDefinition>
-                    <ColumnDefinition Width="50"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="{utils:Loc query_keyword_or_property}" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="8,0,8,0"></TextBlock>
@@ -59,19 +58,19 @@
                     <Grid Name="RaDecFields" Visibility="{Binding FieldType, Converter={StaticResource QpVisConv}, ConverterParameter={x:Static viewModels:FieldType.RaDec}}">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <TextBlock Text="RA:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <TextBox Text="{Binding QueryFieldRa, UpdateSourceTrigger=PropertyChanged}" MinWidth="100" Margin="0,0,8,0" VerticalAlignment="Center" Name="RaBox">
+                            <TextBox Text="{Binding QueryFieldRa, UpdateSourceTrigger=PropertyChanged}" MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="RaBox">
                                 <utils:WatermarkService.Watermark>
                                     <TextBlock Text="{utils:Loc query_ra_placeholder}" Padding="4,0,0,0" VerticalAlignment="Center"></TextBlock>
                                 </utils:WatermarkService.Watermark>
                             </TextBox>
                             <TextBlock Text="Dec:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <TextBox Text="{Binding QueryFieldDec, UpdateSourceTrigger=PropertyChanged}" MinWidth="100" Margin="0,0,8,0" VerticalAlignment="Center" Name="DecBox">
+                            <TextBox Text="{Binding QueryFieldDec, UpdateSourceTrigger=PropertyChanged}" MinWidth="150" Margin="0,0,8,0" VerticalAlignment="Center" Name="DecBox">
                                 <utils:WatermarkService.Watermark>
                                     <TextBlock Text="{utils:Loc query_dec_placeholder}" Padding="4,0,0,0" VerticalAlignment="Center"></TextBlock>
                                 </utils:WatermarkService.Watermark>
                             </TextBox>
                             <TextBlock Text="Radius:" Margin="0,0,8,0" VerticalAlignment="Center"></TextBlock>
-                            <TextBox Text="{Binding QueryFieldDec, UpdateSourceTrigger=PropertyChanged}" MinWidth="50" Margin="0,0,8,0" VerticalAlignment="Center" Name="RaDecRadiusBox">
+                            <TextBox Text="{Binding QueryFieldRaDecRadius, UpdateSourceTrigger=PropertyChanged}" MinWidth="50" Margin="0,0,8,0" VerticalAlignment="Center" Name="RaDecRadiusBox">
                                 <utils:WatermarkService.Watermark>
                                     <TextBlock Text="{utils:Loc query_radius_arcmin_placeholder}" Padding="4,0,0,0" VerticalAlignment="Center"></TextBlock>
                                 </utils:WatermarkService.Watermark>
@@ -113,9 +112,6 @@
                         </StackPanel>
                     </Grid>
                 </StackPanel>
-                <Button Grid.Column="1" Height="24">
-                    <fa:ImageAwesome Icon="MinusCircle" Margin="2"></fa:ImageAwesome>
-                </Button>
             </Grid>
 
         </DockPanel>

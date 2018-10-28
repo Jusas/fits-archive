@@ -3,7 +3,7 @@
 namespace FitsArchiveLib.Database
 {
     [Table(Name = "Fits")]
-    public class FitsTableRow
+    internal class FitsTableRow
     {
         [Column(Name = "id"), PrimaryKey, Identity]
         public long? Id { get; set; }
@@ -14,10 +14,10 @@ namespace FitsArchiveLib.Database
         [Column(Name = "checksum")]
         public string Checksum { get; set; }
 
-        [Column(Name = "size")]
+        [Column(Name = "size"), Nullable]
         public long? Size { get; set; }
 
-        [Column(Name = "date_indexed")]
+        [Column(Name = "date_indexed"), Nullable]
         public long? DateIndexed { get; set; }
     }
 }

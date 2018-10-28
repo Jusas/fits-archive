@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
@@ -58,6 +59,10 @@ namespace FitsArchiveLib.Entities
         public string DatabaseFile { get; private set; }
 
         public int FileCount => QueryFileCount();
+
+        private static List<IndexedFitsKeyword> _indexedFitsKeywords;
+        public IReadOnlyList<IndexedFitsKeyword> IndexedFitsKeyWords => _indexedFitsKeywords;
+
         // private SQLiteConnection _connection;
         // private FitsDbContext _context;
         private List<FitsDbContext> _dbContexts = new List<FitsDbContext>();
@@ -65,7 +70,11 @@ namespace FitsArchiveLib.Entities
         private ILog _log;
 
         private readonly object _readCounterMutex = new object();
-        
+
+        static FitsDatabase()
+        {
+            
+        }
 
         public FitsDatabase(IFitsFileInfoService fitsReader, 
             ILog log,
@@ -175,10 +184,39 @@ namespace FitsArchiveLib.Entities
             }
             catch (Exception e)
             {
-                _log?.Write(LogEventCategory.Error, "Reading FITS file info failed for file '{filePath}'", e);
+                _log?.Write(LogEventCategory.Error, $"Reading FITS file info failed for file '{filePath}'", e);
                 EventUtils.IgnoreExceptions(() => readComplete?.Invoke(filePath));
             }            
             return null;
+        }
+
+        private void GenerateExtraIndexingData(IFitsFileInfo ff, FitsHeaderIndexedRow indexingData)
+        {
+            // Convert RA, DEC to decimal format for searches.
+            try
+            {
+                if (ff.HasHeaderSingleValue("RA") && ff.HasHeaderSingleValue("DEC"))
+                {
+                    indexingData.ParsedRa = (double) ff.GetSingleHeaderValue("RA").Value;
+                    indexingData.ParsedDec = (double) ff.GetSingleHeaderValue("DEC").Value;
+                }
+                else if (ff.HasHeaderSingleValue("RA_OBJ") && ff.HasHeaderSingleValue("DEC_OBJ"))
+                {
+                    indexingData.ParsedRa = (double) ff.GetSingleHeaderValue("RA_OBJ").Value;
+                    indexingData.ParsedDec = (double) ff.GetSingleHeaderValue("DEC_OBJ").Value;
+                }
+                else if (ff.HasHeaderSingleValue("OBJCTRA") && ff.HasHeaderSingleValue("OBJCTDEC"))
+                {
+                    string ra = (string) ff.GetSingleHeaderValue("OBJCTRA").Value;
+                    string dec = (string) ff.GetSingleHeaderValue("OBJCTDEC").Value;
+                    indexingData.ParsedRa = CoordinateTransform.HmsToDegrees(ra);
+                    indexingData.ParsedDec = CoordinateTransform.DmsToDegrees(dec);
+                }
+            }
+            catch (Exception e)
+            {
+                _log?.Write(LogEventCategory.Error, $"Failed to convert RA/DEC coordinates to search index format with file '{ff.FilePath}'", e);
+            }
         }
 
         private async Task InsertOrUpdateFitsFiles(IEnumerable<IFitsFileInfo> fitsFiles)
@@ -280,6 +318,8 @@ namespace FitsArchiveLib.Entities
                                 prop.SetValue(headers, CoerceValue(prop, updatedVal));
                             }
 
+                            GenerateExtraIndexingData(ff, headers);
+
                             if (createHeaderRow)
                                 context.Insert(headers);
                         }
@@ -335,27 +375,60 @@ namespace FitsArchiveLib.Entities
         {
             _dbContexts.ForEach(c => c.Dispose());
         }
+        
 
-        public IQueryable<FitsTableRow> FileListAsQueryable()
+        public IFitsQueryBuilder GetQueryBuilder()
         {
-            // Note: "leaks" contexts. This instance will keep record or produced
-            // contexts in order to dispose of them when the database gets disposed.
-            return Context().Files.AsQueryable();
+            throw new NotImplementedException();
         }
 
-        public IQueryable<FitsHeaderIndexedRow> HeadersIndexedAsQueryable()
+        public async Task<FitsQueryResult> RunQuery(IFitsQueryBuilder queryBuilder)
         {
-            // Note: "leaks" contexts. This instance will keep record or produced
-            // contexts in order to dispose of them when the database gets disposed.
-            return Context().HeadersIndexedTable.AsQueryable();
-        }
+            // lazy
+            FitsQueryBuilder qb = new FitsQueryBuilder();
+            var queryExpr = (FitsQueryExpression)qb.KeywordMatching("TELESCOP", "Celestron NexStar");
+            // var radecExpr = (FitsQueryExpression)qb.RaDecRadius(0, 0, 0);
+            //double? temp = -20.0;
+            //double? gain = 139.0;
+            // var queryExpr2 = (FitsQueryExpression)qb.KeywordMatching("CCD-TEMP", -20.0);
+            //var queryExpr3 = (FitsQueryExpression)qb.KeywordMatching("GAIN", gain);
+            //var headerType = typeof(FitsHeaderIndexedRow);
+            //var parameter = Expression.Parameter(headerType, "x");
+            
+            // var and = Expression.And(queryExpr.Expression.Body, queryExpr2.Expression.Body);
 
-        public IQueryable<PlateSolvesTable> PlateSolvesAsQueryable()
-        {
-            // Note: "leaks" contexts. This instance will keep record or produced
-            // contexts in order to dispose of them when the database gets disposed.
-            return Context().PlateSolvesTable.AsQueryable();
-        }
+            // var lambda = Expression.Lambda<Func<FitsHeaderIndexedRow, bool>>(and, queryExpr.Expression.Parameters[0]);
+            using (var ctx = Context())
+            {
+                var headers = ctx.HeadersIndexedTable.AsQueryable();
+                var files = ctx.Files.AsQueryable();
+                var plateSolves = ctx.PlateSolvesTable.AsQueryable();
 
+                //var joined = items.Join(files, SqlJoinType.Inner, (hdr, fls) => hdr.FitsId == fls.Id,
+                //    (hdr, fls) => new {Header = hdr, Files = fls});
+                //var r = joined.ToList();
+
+                var joinedQuery = headers
+                    .Join(files, SqlJoinType.Inner, (hdrs, fls) => hdrs.FitsId == fls.Id, (hdrs, fls) => new {hdrs, fls})
+                    .Join(plateSolves, SqlJoinType.Left, (headersAndFiles, ps) => headersAndFiles.hdrs.FitsId == ps.FitsId, (headersAndFiles, ps) =>
+                        new FitsSearchResult()
+                        {
+                            FileData = headersAndFiles.fls,
+                            HeaderData = headersAndFiles.hdrs,
+                            PlateSolveData = ps
+                        })
+                    .Where(queryExpr.Expression);
+                var r = joinedQuery.ToList();
+
+                //.Where(queryExpr.Expression);
+                //items = items.Where(queryExpr2.Expression);
+                //items = items.Where(radecExpr.Expression);
+                // var res = await items.ToListAsync();
+                //.ToListAsync();
+                bool b = true;
+            }
+
+            return null;
+        }
     }
 }

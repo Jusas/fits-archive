@@ -75,13 +75,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\FitsFieldAttribute.cs" />
+    <Compile Include="Database\FitsDatabaseDescription.cs" />
     <Compile Include="Database\FitsDbContext.cs" />
     <Compile Include="Database\FitsHeaderIndexedRow.cs" />
+    <Compile Include="Database\FitsSearchResult.cs" />
+    <Compile Include="Database\FitsQueryExpression.cs" />
     <Compile Include="Database\FitsTableRow.cs" />
-    <Compile Include="Database\PlateSolvesTable.cs" />
+    <Compile Include="Database\PlateSolveRow.cs" />
+    <Compile Include="Entities\FitsQueryResult.cs" />
     <Compile Include="Entities\FitsDatabase.cs" />
     <Compile Include="Entities\FitsFileInfo.cs" />
+    <Compile Include="Entities\FitsQueryBuilder.cs" />
     <Compile Include="FitsArchiveLibModule.cs" />
+    <Compile Include="Interfaces\IFitsQueryBuilder.cs" />
     <Compile Include="Interfaces\ILogService.cs" />
     <Compile Include="Services\FitsDatabaseService.cs" />
     <Compile Include="Services\FitsFileInfoService.cs" />
@@ -94,6 +100,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Entities\Log.cs" />
     <Compile Include="Services\LogService.cs" />
+    <Compile Include="Utils\CoordinateTransform.cs" />
     <Compile Include="Utils\EventUtils.cs" />
   </ItemGroup>
   <ItemGroup>

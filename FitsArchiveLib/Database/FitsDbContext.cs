@@ -5,7 +5,7 @@ using LinqToDB.DataProvider.SQLite;
 
 namespace FitsArchiveLib.Database
 {
-    public class FitsDbContext : DataConnection
+    internal class FitsDbContext : DataConnection
     {
         private static IDataProvider _dataProvider = new SQLiteDataProvider();
 
@@ -15,6 +15,6 @@ namespace FitsArchiveLib.Database
         
         public ITable<FitsTableRow> Files => GetTable<FitsTableRow>();
         public ITable<FitsHeaderIndexedRow> HeadersIndexedTable => GetTable<FitsHeaderIndexedRow>();
-        public ITable<PlateSolvesTable> PlateSolvesTable => GetTable<PlateSolvesTable>();
+        public ITable<PlateSolveRow> PlateSolvesTable => GetTable<PlateSolveRow>();
     }
 }

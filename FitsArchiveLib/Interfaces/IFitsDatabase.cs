@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using FitsArchiveLib.Database;
+using FitsArchiveLib.Entities;
 
 namespace FitsArchiveLib.Interfaces
 {
@@ -11,6 +12,28 @@ namespace FitsArchiveLib.Interfaces
         ReadingHeaders,
         InsertingAndUpdating,
         TransactionCompleted
+    }
+
+    public enum KeywordValueType
+    {
+        String,
+        Date,
+        Number
+    }
+
+    [Flags]
+    public enum KeywordQueryHints
+    {
+        None,
+        VarianceValue
+    }
+
+    public struct IndexedFitsKeyword
+    {
+        public string Keyword;
+        public KeywordValueType ValueType;
+        public bool IsMultiValue;
+        public KeywordQueryHints QueryHints;
     }
 
     public delegate void AddStatusHandler(FileDbAddStatus status, 
@@ -22,11 +45,11 @@ namespace FitsArchiveLib.Interfaces
 
         string DatabaseFile { get; }
         int FileCount { get; }
+        IReadOnlyList<IndexedFitsKeyword> IndexedFitsKeyWords { get; }
 
         Task AddFiles(IEnumerable<string> filePaths);
 
-        IQueryable<FitsTableRow> FileListAsQueryable();
-        IQueryable<FitsHeaderIndexedRow> HeadersIndexedAsQueryable();
-        IQueryable<PlateSolvesTable> PlateSolvesAsQueryable();
+        IFitsQueryBuilder GetQueryBuilder(); // this should probably be on its own, not a member
+        Task<FitsQueryResult> RunQuery(IFitsQueryBuilder queryBuilder);
     }
 }

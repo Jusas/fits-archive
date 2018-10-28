@@ -92,6 +92,7 @@
   <ItemGroup>
     <Compile Include="FitsDatabase.Tests.cs" />
     <Compile Include="FitsFile.Tests.cs" />
+    <Compile Include="FitsQueryBuilder.Tests.cs" />
     <Compile Include="Mocks\MockFitsFileInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestUtils.cs" />
