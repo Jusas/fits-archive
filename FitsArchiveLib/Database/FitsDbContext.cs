@@ -14,7 +14,7 @@ namespace FitsArchiveLib.Database
         }
         
         public ITable<FitsTableRow> Files => GetTable<FitsTableRow>();
-        public ITable<FitsHeaderIndexedRow> HeadersIndexedTable => GetTable<FitsHeaderIndexedRow>();
-        public ITable<PlateSolveRow> PlateSolvesTable => GetTable<PlateSolveRow>();
+        public ITable<FitsHeaderIndexedRow> Headers => GetTable<FitsHeaderIndexedRow>();
+        public ITable<PlateSolveRow> PlateSolves => GetTable<PlateSolveRow>();
     }
 }

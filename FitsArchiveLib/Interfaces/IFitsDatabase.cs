@@ -50,6 +50,6 @@ namespace FitsArchiveLib.Interfaces
         Task AddFiles(IEnumerable<string> filePaths);
 
         IFitsQueryBuilder GetQueryBuilder(); // this should probably be on its own, not a member
-        Task<FitsQueryResult> RunQuery(IFitsQueryBuilder queryBuilder);
+        Task<FitsQueryResult> RunQuery(IEnumerable<IFitsQueryExpression> queryExpressions);
     }
 }

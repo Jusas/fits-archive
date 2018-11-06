@@ -39,7 +39,7 @@ namespace FitsArchiveLib.Utils
             if (string.IsNullOrEmpty(dec))
                 return double.NaN;
 
-            var parts = dec.Split(' ');
+            var parts = dec.Split(' ', ':');
             int degrees = Int32.Parse(parts[0]);
             int minutes = parts.Length > 1 ? Int32.Parse(parts[1]) : 0;
             double seconds = parts.Length > 2 ? double.Parse(parts[2], CultureInfo.InvariantCulture) : 0;

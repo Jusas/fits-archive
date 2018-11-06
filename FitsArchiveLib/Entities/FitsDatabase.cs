@@ -293,7 +293,7 @@ namespace FitsArchiveLib.Entities
                         if (fileTableChanges)
                         {
                             var createHeaderRow = false;
-                            var headers = context.HeadersIndexedTable.Where(x => x.FitsId == entry.Id).ToList().FirstOrDefault();
+                            var headers = context.Headers.Where(x => x.FitsId == entry.Id).ToList().FirstOrDefault();
                             if (headers == null)
                             {
                                 createHeaderRow = true;
@@ -382,11 +382,11 @@ namespace FitsArchiveLib.Entities
             throw new NotImplementedException();
         }
 
-        public async Task<FitsQueryResult> RunQuery(IFitsQueryBuilder queryBuilder)
+        public async Task<FitsQueryResult> RunQuery(IEnumerable<IFitsQueryExpression> queryExpressions)
         {
             // lazy
-            FitsQueryBuilder qb = new FitsQueryBuilder();
-            var queryExpr = (FitsQueryExpression)qb.KeywordMatching("TELESCOP", "Celestron NexStar");
+            // FitsQueryBuilder qb = new FitsQueryBuilder();
+            // var queryExpr = (FitsQueryExpression)qb.KeywordMatching("TELESCOP", "Celestron NexStar");
             // var radecExpr = (FitsQueryExpression)qb.RaDecRadius(0, 0, 0);
             //double? temp = -20.0;
             //double? gain = 139.0;
@@ -400,25 +400,35 @@ namespace FitsArchiveLib.Entities
             // var lambda = Expression.Lambda<Func<FitsHeaderIndexedRow, bool>>(and, queryExpr.Expression.Parameters[0]);
             using (var ctx = Context())
             {
-                var headers = ctx.HeadersIndexedTable.AsQueryable();
-                var files = ctx.Files.AsQueryable();
-                var plateSolves = ctx.PlateSolvesTable.AsQueryable();
+                var headersTable = ctx.Headers.AsQueryable();
+                var filesTable = ctx.Files.AsQueryable();
+                var plateSolvesTable = ctx.PlateSolves.AsQueryable();
 
                 //var joined = items.Join(files, SqlJoinType.Inner, (hdr, fls) => hdr.FitsId == fls.Id,
                 //    (hdr, fls) => new {Header = hdr, Files = fls});
                 //var r = joined.ToList();
 
-                var joinedQuery = headers
-                    .Join(files, SqlJoinType.Inner, (hdrs, fls) => hdrs.FitsId == fls.Id, (hdrs, fls) => new {hdrs, fls})
-                    .Join(plateSolves, SqlJoinType.Left, (headersAndFiles, ps) => headersAndFiles.hdrs.FitsId == ps.FitsId, (headersAndFiles, ps) =>
-                        new FitsSearchResult()
-                        {
-                            FileData = headersAndFiles.fls,
-                            HeaderData = headersAndFiles.hdrs,
-                            PlateSolveData = ps
-                        })
-                    .Where(queryExpr.Expression);
-                var r = joinedQuery.ToList();
+                var joinedQuery = headersTable
+                    .Join(filesTable, SqlJoinType.Inner, (headers, files) => headers.FitsId == files.Id,
+                        (headers, files) => new {headers, files})
+                    .Join(plateSolvesTable, SqlJoinType.Left,
+                        (headersAndFiles, plateSolves) => headersAndFiles.headers.FitsId == plateSolves.FitsId,
+                        (headersAndFiles, plateSolves) =>
+                            new FitsSearchResult()
+                            {
+                                FileData = headersAndFiles.files,
+                                HeaderData = headersAndFiles.headers,
+                                PlateSolveData = plateSolves
+                            });
+
+                foreach (var expr in queryExpressions)
+                {
+                    joinedQuery = joinedQuery.Where(((FitsQueryExpression)expr).Expression);
+                }
+
+                var results = await joinedQuery.ToListAsync();
+                    // .Where(queryExpr.Expression);
+                // var r = joinedQuery.ToList();
 
                 //.Where(queryExpr.Expression);
                 //items = items.Where(queryExpr2.Expression);

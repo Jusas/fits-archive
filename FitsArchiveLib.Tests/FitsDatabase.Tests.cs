@@ -105,7 +105,10 @@ namespace FitsArchiveLib.Tests
                 var fitsFilePath = Path.Combine(TestUtils.GetTestPath(), "Resources", "FitsFiles", "Light_001.fits");
                 await newFitsDb.AddFiles(new[] { fitsFilePath });
                 // var queryable = newFitsDb.FileListAsQueryable();
-                var fcount = newFitsDb.RunQuery(null);
+                var builder = new FitsQueryBuilder();
+                var q = builder.KeywordSearch("TELESCOP", "NexStar");
+                var q2 = builder.RaDecRadius(36.801, 33.3, 60);
+                var fcount = newFitsDb.RunQuery(new [] {q, q2});
                 Assert.AreEqual(1, fcount);
             }
         }
